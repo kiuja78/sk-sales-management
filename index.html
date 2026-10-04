@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta name="app-version" content="V1.01">
+  <meta name="app-version" content="V1.02">
   <meta charset="utf-8">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SK 영업관리 시스템</title>
-  <link rel="stylesheet" href="./styles.css?v=sk103">
+  <link rel="stylesheet" href="./styles.css?v=sk104">
   <link rel="icon" type="image/png" href="./assets/sales_manager_icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#f14b52">
@@ -1634,10 +1634,27 @@
             </div>
             <div class="menu-toggle-grid">
               <label class="menu-toggle-item"><span>업무체크리스트</span><input id="menuVisibilityChecklist" type="checkbox"><i></i></label>
+              <label class="menu-toggle-item"><span>영업분석 및 통계</span><input id="menuVisibilityAnalytics" type="checkbox"><i></i></label>
+              <label class="menu-toggle-item"><span>경영평가</span><input id="menuVisibilityEvaluation" type="checkbox"><i></i></label>
               <label class="menu-toggle-item"><span>월별도표</span><input id="menuVisibilityRenewalGuide" type="checkbox"><i></i></label>
+              <label class="menu-toggle-item"><span>급여계산</span><input id="menuVisibilityPayroll" type="checkbox"><i></i></label>
             </div>
             <div class="form-actions section-save-row">
               <button class="primary-button" id="saveMenuVisibilityBtn" type="button">메뉴 노출 저장</button>
+            </div>
+          </section>
+
+<section class="panel settings-card team-operation-settings-card">
+            <div class="panel-head">
+              <h2>팀 운영 형태 설정</h2>
+            </div>
+            <div class="team-operation-settings-body">
+              <label class="team-operation-month-field">적용월<input id="teamOperationEffectiveMonth" type="month"></label>
+              <div class="goal-team-operation-buttons" role="group" aria-label="팀 운영 형태 선택">
+                <button class="ghost-button small team-operation-btn" id="teamOperationSingleBtn" type="button" data-team-operation="1">1팀 운영</button>
+                <button class="ghost-button small team-operation-btn" id="teamOperationDualBtn" type="button" data-team-operation="2">2팀 운영</button>
+              </div>
+              <p class="settings-help-text team-operation-settings-help">선택한 적용월부터 팀 운영 형태가 반영됩니다. 1팀 운영은 전체 매니저·실적을 사용하고, 2팀 운영은 사용자와 매니저의 소속팀 기준으로 표시·계산합니다. 이전 월 데이터는 변경되지 않습니다.</p>
             </div>
           </section>
 
@@ -1652,7 +1669,7 @@
               <label>내 소속팀<select id="masterTeamInput"></select></label>
               <label>소속팀 적용월<input id="masterTeamEffectiveMonth" type="month"></label>
             </div>
-            <p class="settings-help-text">2팀 운영일 때만 내 소속팀을 선택합니다. 선택한 적용월부터 해당 팀으로 적용되며, 이전 월의 조직·실적 데이터는 변경되지 않습니다. 1팀 운영에서는 전체 매니저와 전체 실적을 사용합니다.</p>
+            <p class="settings-help-text">2팀 운영일 때만 내 소속팀을 선택합니다. 팀 운영 형태의 적용월과 맞춰 저장하면 해당 월부터 소속팀이 적용되며, 이전 월 조직·실적 데이터는 변경되지 않습니다.</p>
             <div class="form-actions section-save-row">
               <button class="ghost-button" id="editUserSettingsBtn" type="button">사용자 수정</button>
               <button class="primary-button" id="saveUserSettingsBtn" type="button">사용자 등록/저장</button>
@@ -1685,19 +1702,7 @@
                 <label class="goal-package-field">패키지 목표비율(%)<input id="packageRateInput" type="number" min="0" max="100" step="1"></label>
               </div>
               </div>
-              <div class="goal-team-operation">
-                <div class="goal-team-operation-head">
-                  <div>
-                    <strong>팀 운영 형태</strong>
-                    <small>지국에서 사용하는 팀 수만 선택하세요.</small>
-                  </div>
-                  <div class="goal-team-operation-buttons" role="group" aria-label="팀 운영 형태 선택">
-                    <button class="ghost-button small team-operation-btn" id="teamOperationSingleBtn" type="button" data-team-operation="1">1팀 운영</button>
-                    <button class="ghost-button small team-operation-btn" id="teamOperationDualBtn" type="button" data-team-operation="2">2팀 운영</button>
-                  </div>
-                </div>
-                <p class="goal-team-operation-help">위 목표월부터 운영 형태가 적용됩니다. 1팀 운영은 전체 매니저·실적을 사용하고, 2팀 운영은 담당 마스터의 소속팀 기준으로 표시·계산합니다. 이전 월의 데이터는 변경되지 않습니다.</p>
-              </div>
+              
             </div>
             <div class="form-actions section-save-row">
               <button class="ghost-button" id="editGoalSettingsBtn" type="button">월 목표지수 수정</button>
@@ -1930,7 +1935,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase-config.js?v=sk101"></script>
   <script src="./supabase-sync.js?v=sk101"></script>
-  <script src="./app.js?v=sk101"></script>
+  <script src="./app.js?v=sk102"></script>
 
     
   <nav class="mobile-app-nav" id="mobileAppNav" aria-label="모바일 주요 메뉴">
