@@ -22026,99 +22026,126 @@ body[data-view="records"] .record-form-row.row-basic {
 .license-table{min-width:1220px}
 .license-row-actions{min-width:210px}
 .license-mobile-person{margin:8px 0 0!important;color:#4f6259!important;font-weight:800}
-/* SK BRAND V1.01 FINAL OVERRIDE */
-.sidebar {
-  background:
-    radial-gradient(circle at 18% 7%, rgba(255,255,255,.72), transparent 25%),
-    radial-gradient(circle at 90% 32%, rgba(255,184,121,.26), transparent 28%),
-    linear-gradient(180deg, #fff7f1 0%, #ffe4cf 30%, #ffc092 67%, #f56d72 100%) !important;
-  color: #692627 !important;
-  box-shadow: inset -1px 0 0 rgba(180,70,65,.10), 10px 0 34px rgba(157,76,58,.06) !important;
-}
-
-.brand-text strong {
-  color: #8e2026 !important;
-  font-weight: 900 !important;
-  text-shadow: none !important;
-}
-.brand-text em {
-  color: #a3574d !important;
-  font-style: normal !important;
-  font-weight: 700 !important;
+/* SK BRAND V1.02 TUNE OVERRIDE */
+.brand {
+  gap: 14px !important;
+  align-items: flex-start !important;
 }
 
 .brand-program-icon {
-  width: 48px !important;
-  height: 48px !important;
-  flex: 0 0 48px !important;
-  padding: 3px !important;
-  background: rgba(255,255,255,.94) !important;
-  border: 1px solid rgba(211,69,64,.18) !important;
-  border-radius: 13px !important;
-  box-shadow: 0 8px 20px rgba(177,63,56,.14) !important;
+  width: 56px !important;
+  height: 56px !important;
+  flex: 0 0 56px !important;
+  padding: 4px !important;
+  background: rgba(255,255,255,.96) !important;
+  border: 1px solid rgba(214, 79, 64, 0.22) !important;
+  box-shadow: 0 10px 22px rgba(179, 68, 59, 0.16) !important;
+  transform-origin: center center !important;
   overflow: hidden !important;
 }
 .brand-program-icon::before,
 .brand-program-icon::after {
-  display: none !important;
+  display: block !important;
+}
+.brand-program-icon::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 13px !important;
+  border: 2px solid rgba(255,255,255,.55) !important;
+  opacity: .75 !important;
+  animation: skBrandPulseRing 2.8s ease-in-out infinite !important;
+}
+.brand-program-icon::after {
+  content: "" !important;
+  position: absolute !important;
+  top: -15% !important;
+  left: -65% !important;
+  width: 38% !important;
+  height: 130% !important;
+  transform: rotate(18deg) !important;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 35%, rgba(255,255,255,.75) 50%, rgba(255,255,255,.18) 66%, transparent 100%) !important;
+  animation: skBrandShine 4.5s ease-in-out infinite !important;
+  pointer-events: none !important;
 }
 .brand-program-icon img {
+  position: relative !important;
+  z-index: 2 !important;
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
-  border-radius: 9px !important;
-  filter: none !important;
-  animation: none !important;
+  border-radius: 10px !important;
+  animation: skBrandFloat 3.2s ease-in-out infinite !important;
+  filter: saturate(1.03) contrast(1.01) !important;
   background: #fff !important;
 }
 
-.nav {
-  gap: 8px !important;
+.brand-text {
+  padding-top: 3px !important;
+  min-width: 0 !important;
 }
-.nav-item {
-  color: #74312f !important;
-  background: rgba(255,255,255,.28) !important;
-  border: 1px solid rgba(255,255,255,.38) !important;
-  box-shadow: none !important;
-  font-weight: 700 !important;
+.brand-text strong,
+#sidebarAppTitle {
+  white-space: normal !important;
+  display: block !important;
+  max-width: 148px !important;
+  line-height: 1.12 !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.03em !important;
+  color: #fff6f4 !important;
+  text-shadow: 0 1px 0 rgba(135, 40, 37, .28), 0 2px 10px rgba(255,255,255,.20) !important;
 }
-.nav-item:hover {
-  color: #d92331 !important;
-  background: rgba(255,255,255,.70) !important;
-  box-shadow: 0 8px 20px rgba(194,69,59,.10) !important;
-  transform: translateX(2px) !important;
-}
-.nav-item.active {
-  color: #e22332 !important;
-  background: rgba(255,255,255,.95) !important;
-  border-color: rgba(255,255,255,.88) !important;
-  box-shadow: 0 10px 24px rgba(194,69,59,.14) !important;
-  transform: translateX(2px) !important;
+.brand-text em,
+#sidebarManagerLine {
+  margin-top: 5px !important;
+  display: block !important;
+  color: #732f2d !important;
+  font-style: normal !important;
+  font-weight: 800 !important;
+  font-size: 12.5px !important;
 }
 
 .sidebar-clock-card {
-  background: rgba(255,255,255,.86) !important;
-  border: 1px solid rgba(255,255,255,.78) !important;
-  box-shadow: 0 10px 24px rgba(172,66,58,.12) !important;
+  background: rgba(255,255,255,.88) !important;
+  border: 1px solid rgba(255,255,255,.80) !important;
 }
 .digital-clock {
-  color: #de2530 !important;
-  text-shadow: none !important;
+  color: #24456b !important;
+  text-shadow: 0 1px 0 rgba(255,255,255,.5) !important;
 }
 .digital-date {
-  color: #93453e !important;
-}
-.sidebar-credit {
-  background: rgba(255,255,255,.30) !important;
-  color: #7e3533 !important;
+  color: #4d6481 !important;
 }
 
-.startup-intro-icon {
-  background: #fff !important;
-  border-color: rgba(216,69,63,.16) !important;
+.sidebar-credit {
+  position: relative !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  background: rgba(255,255,255,.32) !important;
 }
-.startup-intro-icon img {
-  object-fit: contain !important;
-  padding: 5px !important;
-  background: #fff !important;
+.sidebar-credit::before {
+  content: "기획개발 : 김건일 팀장" !important;
+  color: #813937 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.03em !important;
+}
+
+@keyframes skBrandFloat {
+  0%,100% { transform: translateY(0) rotate(0deg) scale(1); }
+  25% { transform: translateY(-1px) rotate(-2deg) scale(1.015); }
+  50% { transform: translateY(-3px) rotate(0deg) scale(1.03); }
+  75% { transform: translateY(-1px) rotate(2deg) scale(1.015); }
+}
+@keyframes skBrandPulseRing {
+  0%,100% { box-shadow: inset 0 0 0 0 rgba(255,255,255,.10), 0 0 0 0 rgba(255,255,255,.0); opacity:.72; }
+  50% { box-shadow: inset 0 0 0 8px rgba(255,255,255,.0), 0 0 18px 2px rgba(255,255,255,.16); opacity:1; }
+}
+@keyframes skBrandShine {
+  0%, 12% { left: -70%; opacity: 0; }
+  18% { opacity: .8; }
+  34% { left: 128%; opacity: .15; }
+  100% { left: 128%; opacity: 0; }
 }
