@@ -278,8 +278,7 @@ async function writeDbHistorySnapshot(reason = "manual", sourceState = state, op
       });
       snapshot.cloudBackupId = cloud?.id || "";
       snapshot.externalStatus = "supabase-ok";
-      if (snapshot.cloudBackupId) snapshot.id = `supabase:${snapshot.cloudBackupId}`;
-      await putDbHistorySnapshot({ ...snapshot, id: snapshot.id });
+      await putDbHistorySnapshot(snapshot);
       const settings = normalizeDbBackupSettings(state.dbBackupSettings);
       await window.SKCloud.cleanupBackups?.(settings.retentionDays, settings.maxBackups);
       if (reason === "auto") localStorage.setItem(DB_LAST_AUTO_BACKUP_KEY, snapshot.exportedAt);
