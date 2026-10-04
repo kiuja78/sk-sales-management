@@ -245,6 +245,7 @@ async function writeDbHistorySnapshot(reason = "manual", sourceState = state, op
   if (IS_PC_APP) return null;
   const count = stateDataCount(sourceState);
   if (!count && options.allowEmpty !== true) return null;
+
   let data = sourceState;
   try { data = structuredClone(sourceState); } catch (_) {}
   const counts = dbBackupCounts(data);
@@ -261,13 +262,36 @@ async function writeDbHistorySnapshot(reason = "manual", sourceState = state, op
     externalStatus: "local",
     data
   };
+
+  // 현재 브라우저에도 안전 사본을 남겨 두되, 기준 복구이력은 Supabase입니다.
   await putDbHistorySnapshot(snapshot);
-  localStorage.setItem(DB_LAST_AUTO_BACKUP_KEY, reason === "auto" ? snapshot.exportedAt : (localStorage.getItem(DB_LAST_AUTO_BACKUP_KEY) || ""));
   await cleanupDbHistorySnapshots();
-  if (options.tryDrive !== false) {
-    if (options.forceDrive) await maybeBackupSnapshotToGoogleDrive(snapshot, true);
-    else void maybeBackupSnapshotToGoogleDrive(snapshot, false);
+
+  if (window.SKCloud?.createBackup) {
+    try {
+      const cloud = await window.SKCloud.createBackup(data, {
+        reason,
+        reasonLabel: snapshot.reasonLabel,
+        recordCount: snapshot.recordCount,
+        managerCount: snapshot.managerCount,
+        dataCount: snapshot.dataCount
+      });
+      snapshot.cloudBackupId = cloud?.id || "";
+      snapshot.externalStatus = "supabase-ok";
+      if (snapshot.cloudBackupId) snapshot.id = `supabase:${snapshot.cloudBackupId}`;
+      await putDbHistorySnapshot({ ...snapshot, id: snapshot.id });
+      const settings = normalizeDbBackupSettings(state.dbBackupSettings);
+      await window.SKCloud.cleanupBackups?.(settings.retentionDays, settings.maxBackups);
+      if (reason === "auto") localStorage.setItem(DB_LAST_AUTO_BACKUP_KEY, snapshot.exportedAt);
+    } catch (error) {
+      console.error("[SUPABASE BACKUP] create failed", error);
+      snapshot.externalStatus = "supabase-failed";
+      // 자동백업 실패 시 다음 저장에서 다시 시도할 수 있도록 마지막 성공시각은 갱신하지 않습니다.
+    }
+  } else if (reason === "auto") {
+    localStorage.setItem(DB_LAST_AUTO_BACKUP_KEY, snapshot.exportedAt);
   }
+
   return snapshot;
 }
 
@@ -324,24 +348,19 @@ async function createDbBackup(reason = "manual", options = {}) {
       return null;
     }
   }
+
   try {
-    const snapshot = await writeDbHistorySnapshot(reason, state, { allowEmpty: options.allowEmpty, forceDrive: options.forceExternal });
+    const snapshot = await writeDbHistorySnapshot(reason, state, { allowEmpty: options.allowEmpty });
     if (!options.silent) {
       if (!snapshot) showToast("백업할 데이터가 없습니다.");
-      else {
-        const settings = normalizeDbBackupSettings(state.dbBackupSettings);
-        if (options.forceExternal && settings.driveEnabled) {
-          if (snapshot.externalStatus === "drive-ok") showToast(`${dbReasonLabel(reason)} · Google Drive까지 저장했습니다.`);
-          else if (!validDriveToken()) showToast(`${dbReasonLabel(reason)} 저장 완료 · Google Drive 연결이 필요합니다.`);
-          else showToast(`${dbReasonLabel(reason)} 저장 완료 · Google Drive 상태를 확인해 주세요.`);
-        } else showToast(`${dbReasonLabel(reason)}을 저장했습니다.`);
-      }
+      else if (snapshot.externalStatus === "supabase-ok") showToast(`${dbReasonLabel(reason)}을 Supabase에 저장했습니다.`);
+      else showToast(`${dbReasonLabel(reason)}의 로컬 사본은 저장했지만 Supabase 백업을 확인해 주세요.`);
     }
     if (currentView === "db") refreshDbManagement();
     return snapshot;
   } catch (error) {
-    console.error("[DB BACKUP] web backup failed", error);
-    if (!options.silent) showToast("백업 저장에 실패했습니다.");
+    console.error("[DB BACKUP] Supabase backup failed", error);
+    if (!options.silent) showToast("Supabase 백업 저장에 실패했습니다.");
     return null;
   }
 }
@@ -653,10 +672,10 @@ function dbHistoryStatusLabel(row) {
     if (row.secondaryAttempted && !row.secondaryOk) return { text: "기본 저장 · 2차 실패", cls: "is-warn" };
     return { text: "기본 저장", cls: "is-ok" };
   }
-  if (row.source === "drive" || row.externalStatus === "drive-only") return { text: "Google Drive", cls: "is-ok" };
-  if (row.externalStatus === "drive-ok") return { text: "로컬 + Drive", cls: "is-ok" };
-  if (row.externalStatus === "drive-failed") return { text: "로컬 저장 · Drive 실패", cls: "is-warn" };
-  return { text: "브라우저 로컬", cls: "is-ok" };
+  if (row.source === "supabase" || String(row.id || "").startsWith("supabase:")) return { text: "Supabase", cls: "is-ok" };
+  if (row.externalStatus === "supabase-ok") return { text: "Supabase + 로컬", cls: "is-ok" };
+  if (row.externalStatus === "supabase-failed") return { text: "로컬만 저장", cls: "is-warn" };
+  return { text: "브라우저 안전사본", cls: "is-ok" };
 }
 
 function renderDbHistoryRows(rows = []) {
@@ -699,63 +718,70 @@ async function refreshDbManagement() {
   if (!$("#dbView")) return;
   const seq = ++dbRefreshSequence;
   const counts = dbBackupCounts(state);
+
   if ($("#dbCurrentDataCount")) $("#dbCurrentDataCount").textContent = `${counts.records.toLocaleString()}건`;
   if ($("#dbCurrentDataDetail")) $("#dbCurrentDataDetail").textContent = `매니저 ${counts.managers.toLocaleString()}명 · 저장항목 ${counts.total.toLocaleString()}개`;
-  $("#dbWebDriveSettings")?.toggleAttribute("hidden", IS_PC_APP);
-  $("#dbPcFolderSettings")?.toggleAttribute("hidden", !IS_PC_APP);
+
   try {
     if (IS_PC_APP) {
       const status = await fetchPcDbStatus();
       if (seq !== dbRefreshSequence) return;
       const rows = Array.isArray(status.history) ? status.history : [];
-      const auto = rows.find((row) => row.reason === "auto") || null;
-      if ($("#dbLastAutoBackup")) $("#dbLastAutoBackup").textContent = auto ? formatDbDateTime(auto.exportedAt) : "없음";
-      if ($("#dbLastAutoBackupDetail")) $("#dbLastAutoBackupDetail").textContent = status.settings?.autoEnabled === false ? "자동백업 사용 안 함" : `설정 간격 ${status.settings?.intervalMinutes || 60}분`;
+      if ($("#dbCloudStatus")) $("#dbCloudStatus").textContent = "PC 저장";
+      if ($("#dbCloudAccount")) $("#dbCloudAccount").textContent = "데스크톱 로컬 저장 방식";
+      if ($("#dbCloudLastSaved")) $("#dbCloudLastSaved").textContent = rows[0] ? formatDbDateTime(rows[0].exportedAt) : "-";
+      if ($("#dbCloudRevision")) $("#dbCloudRevision").textContent = "PC 백업 이력 기준";
       if ($("#dbHistoryCount")) $("#dbHistoryCount").textContent = `${rows.length.toLocaleString()}개`;
       if ($("#dbHistoryCountDetail")) $("#dbHistoryCountDetail").textContent = `기본 위치 · ${status.settings?.retentionDays || 30}일 보관`;
-      const secondaryEnabled = Boolean(status.settings?.secondaryEnabled && status.settings?.secondaryFolder);
-      const secondaryError = String(status.settings?.lastSecondaryError || "").trim();
-      const secondaryWarning = secondaryEnabled && (status.secondaryAvailable === false || Boolean(secondaryError));
-      if ($("#dbSecondaryStatus")) $("#dbSecondaryStatus").textContent = secondaryEnabled ? (secondaryWarning ? "확인 필요" : "사용 중") : "미설정";
-      if ($("#dbSecondaryDetail")) $("#dbSecondaryDetail").textContent = secondaryEnabled ? (secondaryError || status.settings.secondaryFolder || "") : "2차 백업 폴더를 선택할 수 있습니다.";
-      if ($("#dbPcSecondaryFolder")) $("#dbPcSecondaryFolder").value = status.settings?.secondaryFolder || "";
-      if ($("#dbPcSecondaryEnabled")) $("#dbPcSecondaryEnabled").checked = Boolean(status.settings?.secondaryEnabled);
-      if ($("#dbPcPrimaryFolderLabel")) $("#dbPcPrimaryFolderLabel").textContent = `기본 자동백업 · ${status.primaryBackupDir || ""}`;
-      if ($("#dbPcSecondaryLastLabel")) $("#dbPcSecondaryLastLabel").textContent = secondaryError ? `최근 2차 백업 확인 필요 · ${secondaryError}` : (status.settings?.lastSecondaryBackupAt ? `최근 2차 백업 ${formatDbDateTime(status.settings.lastSecondaryBackupAt)}` : "최근 2차 백업 없음");
-      const pill = $("#dbPcSecondaryStatePill");
-      if (pill) { pill.className = `db-state-pill ${secondaryEnabled ? (secondaryWarning ? "is-warn" : "is-ok") : ""}`; pill.textContent = secondaryEnabled ? (secondaryWarning ? "확인 필요" : "사용 중") : "미설정"; }
       populateDbSettingsControls(status);
       renderDbHistoryRows(rows);
-    } else {
-      const localRows = await listDbHistorySnapshots();
-      if (seq !== dbRefreshSequence) return;
-      const settings = normalizeDbBackupSettings(state.dbBackupSettings);
-      let rows = localRows;
-      // 로컬 브라우저 데이터가 삭제된 재해복구 상황에서는 driveEnabled 설정 자체도
-      // 함께 사라질 수 있습니다. Google 계정만 다시 연결하면 자동백업 사용 여부와
-      // 관계없이 Drive에 남은 백업 이력을 조회하여 복구할 수 있게 합니다.
-      if (validDriveToken()) {
-        const driveRows = await listGoogleDriveBackups();
-        if (seq !== dbRefreshSequence) return;
-        rows = mergeDbHistoryWithDrive(localRows, driveRows);
-      }
-      const auto = localRows.find((row) => row.reason === "auto") || null;
-      if ($("#dbLastAutoBackup")) $("#dbLastAutoBackup").textContent = auto ? formatDbDateTime(auto.exportedAt) : "없음";
-      if ($("#dbLastAutoBackupDetail")) $("#dbLastAutoBackupDetail").textContent = settings.autoEnabled ? `설정 간격 ${settings.intervalMinutes}분` : "자동백업 사용 안 함";
-      if ($("#dbHistoryCount")) $("#dbHistoryCount").textContent = `${rows.length.toLocaleString()}개`;
-      if ($("#dbHistoryCountDetail")) $("#dbHistoryCountDetail").textContent = `브라우저 내부 · ${settings.retentionDays}일 보관`;
-      if ($("#dbSecondaryStatus")) $("#dbSecondaryStatus").textContent = validDriveToken() ? "Drive 연결됨" : (settings.driveEnabled ? "연결 필요" : "사용 안 함");
-      if ($("#dbSecondaryDetail")) {
-        $("#dbSecondaryDetail").textContent = validDriveToken()
-          ? (settings.driveEnabled ? (dbDriveAccountLabel || "Google Drive 안전백업 사용 중") : "Google Drive 연결됨 · 자동 Drive 백업은 사용 안 함")
-          : (settings.driveEnabled ? "Google 연결 버튼을 눌러주세요." : "Google Drive 안전백업을 설정할 수 있습니다.");
-      }
-      populateDbSettingsControls();
-      renderDbHistoryRows(rows);
+      return;
     }
+
+    const settings = normalizeDbBackupSettings(state.dbBackupSettings);
+    const [cloudStatus, cloudRows, localRows] = await Promise.all([
+      window.SKCloud?.getStatus?.(),
+      window.SKCloud?.listBackups?.(Math.max(200, settings.maxBackups || 100)),
+      listDbHistorySnapshots()
+    ]);
+    if (seq !== dbRefreshSequence) return;
+
+    if ($("#dbCloudStatus")) $("#dbCloudStatus").textContent = cloudStatus?.connected ? "연결됨" : "확인 필요";
+    if ($("#dbCloudAccount")) $("#dbCloudAccount").textContent = cloudStatus?.userEmail ? `로그인 · ${cloudStatus.userEmail}` : "Supabase 로그인 계정";
+    if ($("#dbCloudLastSaved")) $("#dbCloudLastSaved").textContent = cloudStatus?.updatedAt ? formatDbDateTime(cloudStatus.updatedAt) : "저장 이력 없음";
+    if ($("#dbCloudRevision")) $("#dbCloudRevision").textContent = `Revision ${Number(cloudStatus?.revision || 0).toLocaleString()} · 실시간 중앙저장`;
+
+    const pill = $("#dbCloudStatePill");
+    if (pill) {
+      pill.className = `db-state-pill ${cloudStatus?.connected ? "is-ok" : "is-warn"}`;
+      pill.textContent = cloudStatus?.connected ? "정상 연결" : "확인 필요";
+    }
+
+    const mappedRows = (Array.isArray(cloudRows) ? cloudRows : []).map((row) => ({
+      id: `supabase:${row.id}`,
+      cloudBackupId: row.id,
+      exportedAt: row.createdAt,
+      reason: row.reason,
+      reasonLabel: row.reasonLabel,
+      recordCount: row.recordCount,
+      managerCount: row.managerCount,
+      dataCount: row.dataCount,
+      revision: row.revision,
+      source: "supabase"
+    }));
+
+    if ($("#dbHistoryCount")) $("#dbHistoryCount").textContent = `${mappedRows.length.toLocaleString()}개`;
+    if ($("#dbHistoryCountDetail")) $("#dbHistoryCountDetail").textContent = `Supabase · ${settings.retentionDays}일 / 최대 ${settings.maxBackups}개`;
+    if ($("#dbBrowserCacheStatus")) $("#dbBrowserCacheStatus").textContent = `정상 · 로컬 안전사본 ${localRows.length.toLocaleString()}개`;
+
+    populateDbSettingsControls();
+    renderDbHistoryRows(mappedRows);
   } catch (error) {
-    console.error("[DB MANAGEMENT] refresh failed", error);
-    if ($("#dbSecondaryStatus")) $("#dbSecondaryStatus").textContent = "확인 실패";
+    console.error("[DB MANAGEMENT] Supabase refresh failed", error);
+    if ($("#dbCloudStatus")) $("#dbCloudStatus").textContent = "확인 실패";
+    if ($("#dbCloudAccount")) $("#dbCloudAccount").textContent = "Supabase 연결상태를 확인해 주세요.";
+    const pill = $("#dbCloudStatePill");
+    if (pill) { pill.className = "db-state-pill is-warn"; pill.textContent = "확인 실패"; }
     renderDbHistoryRows([]);
   }
 }
@@ -772,27 +798,40 @@ async function saveDbBackupSettings() {
     retentionDays: Number($("#dbRetentionDays")?.value || 30),
     maxBackups: Number($("#dbMaxBackups")?.value || 100)
   };
+
   if (IS_PC_APP) {
     try {
-      const response = await fetch("/api/db/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...common, secondaryEnabled: Boolean($("#dbPcSecondaryEnabled")?.checked), secondaryFolder: String($("#dbPcSecondaryFolder")?.value || "").trim() }) });
+      const response = await fetch("/api/db/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(common)
+      });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || result?.ok === false) throw new Error(result?.error || "설정 저장 실패");
-      showToast("DB 자동백업 설정을 저장했습니다.");
+      showToast("복구백업 설정을 저장했습니다.");
       refreshDbManagement();
-    } catch (error) { console.error("[DB SETTINGS] PC save failed", error); showToast("DB 백업 설정 저장에 실패했습니다."); }
+    } catch (error) {
+      console.error("[DB SETTINGS] PC save failed", error);
+      showToast("백업 설정 저장에 실패했습니다.");
+    }
     return;
   }
+
   state.dbBackupSettings = normalizeDbBackupSettings({
     ...state.dbBackupSettings,
     ...common,
-    driveEnabled: Boolean($("#dbDriveEnabled")?.checked),
-    driveClientId: String($("#dbDriveClientId")?.value || "").trim(),
-    driveFolderName: String($("#dbDriveFolderName")?.value || "").trim() || "SK 영업관리 시스템 백업",
-    driveIntervalHours: Number($("#dbDriveIntervalHours")?.value || 24)
+    driveEnabled: false,
+    driveClientId: "",
+    driveFolderId: ""
   });
   await persistState({ skipDbAutoBackup: true });
   await cleanupDbHistorySnapshots();
-  showToast("DB 자동백업 설정을 저장했습니다.");
+  try {
+    await window.SKCloud?.cleanupBackups?.(common.retentionDays, common.maxBackups);
+  } catch (error) {
+    console.warn("[SUPABASE BACKUP] cleanup failed", error);
+  }
+  showToast("Supabase 복구백업 설정을 저장했습니다.");
   refreshDbManagement();
 }
 
@@ -827,35 +866,48 @@ async function restoreDbHistory(id) {
   if (!id) return;
   try {
     let target = null;
-    let driveData = null;
+
     if (IS_PC_APP) {
       const status = await fetchPcDbStatus();
       target = (status.history || []).find((row) => String(row.id || row.fileName) === String(id));
-    } else if (String(id).startsWith("drive:")) {
-      const fileId = String(id).slice(6);
-      const downloaded = await downloadGoogleDriveBackup(fileId);
-      driveData = downloaded.data;
-      target = {
-        id,
-        recordCount: Array.isArray(driveData.records) ? driveData.records.length : 0,
-        managerCount: Array.isArray(driveData.managers) ? driveData.managers.length : 0,
-        data: driveData,
-        source: "drive"
-      };
-    } else target = await getDbHistorySnapshot(id);
+    } else if (String(id).startsWith("supabase:")) {
+      const backupId = String(id).slice("supabase:".length);
+      const cloud = await window.SKCloud?.getBackup?.(backupId);
+      if (cloud?.data) {
+        target = {
+          id,
+          data: cloud.data,
+          recordCount: cloud.recordCount,
+          managerCount: cloud.managerCount,
+          exportedAt: cloud.createdAt,
+          reason: cloud.reason,
+          reasonLabel: cloud.reasonLabel,
+          source: "supabase"
+        };
+      }
+    } else {
+      target = await getDbHistorySnapshot(id);
+    }
+
     if (!target) { showToast("선택한 백업을 찾지 못했습니다."); return; }
     const ok = await confirmBackupRestoreInApp(Number(target.recordCount || 0), Number(target.managerCount || 0));
     if (!ok) return;
-    showToast("현재 데이터를 안전백업한 뒤 복구를 진행합니다...");
+
+    showToast("현재 데이터를 Supabase에 안전백업한 뒤 복구를 진행합니다...");
+
     if (IS_PC_APP) {
-      const response = await fetch("/api/db/restore", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+      const response = await fetch("/api/db/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || result?.ok === false || !result.data) throw new Error(result?.error || "백업 복구 실패");
       state = normalizeState(result.data);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       await persistState({ immediateServer: true, allowEmptyServer: true, skipDbAutoBackup: true });
     } else {
-      await writeDbHistorySnapshot("before-restore", state, { tryDrive: false });
+      await writeDbHistorySnapshot("before-restore", state);
       const currentRevision = Number(state?.appMeta?.persistRevision || 0);
       state = normalizeState(target.data);
       state.appMeta = state.appMeta || {};
@@ -863,43 +915,68 @@ async function restoreDbHistory(id) {
       const saved = await persistState({ allowEmptyServer: true, skipDbAutoBackup: true });
       if (!saved.ok) throw new Error("복구 데이터 저장 실패");
     }
+
     invalidateManagerCaches();
     selectedRecordId = "";
     renderNow();
-    showToast("선택한 백업으로 복구를 완료했습니다.");
+    showToast("선택한 Supabase 백업으로 복구를 완료했습니다.");
     await refreshDbManagement();
-  } catch (error) { console.error("[DB RESTORE] failed", error); showToast("백업 복구 중 오류가 발생했습니다."); }
+  } catch (error) {
+    console.error("[DB RESTORE] failed", error);
+    showToast("백업 복구 중 오류가 발생했습니다.");
+  }
 }
 
 async function exportDbHistory(id) {
   if (!id) return;
+
   if (IS_PC_APP) {
     const link = document.createElement("a");
     link.href = `/api/db/export?id=${encodeURIComponent(id)}`;
     link.style.display = "none";
-    document.body.appendChild(link); link.click(); link.remove();
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
     return;
   }
+
   let snapshot = null;
-  if (String(id).startsWith("drive:")) {
-    const downloaded = await downloadGoogleDriveBackup(String(id).slice(6));
-    const payload = downloaded.payload && typeof downloaded.payload === "object" ? downloaded.payload : {};
-    snapshot = {
-      schemaVersion: payload.schemaVersion || STATE_SCHEMA_VERSION,
-      exportedAt: payload.exportedAt || new Date().toISOString(),
-      reason: payload.reason || "Google Drive 백업",
-      reasonLabel: payload.reason || "Google Drive 백업",
-      data: downloaded.data
-    };
-  } else snapshot = await getDbHistorySnapshot(id);
+  if (String(id).startsWith("supabase:")) {
+    const backupId = String(id).slice("supabase:".length);
+    const cloud = await window.SKCloud?.getBackup?.(backupId);
+    if (cloud?.data) {
+      snapshot = {
+        schemaVersion: STATE_SCHEMA_VERSION,
+        exportedAt: cloud.createdAt,
+        reason: cloud.reason,
+        reasonLabel: cloud.reasonLabel,
+        data: cloud.data
+      };
+    }
+  } else {
+    snapshot = await getDbHistorySnapshot(id);
+  }
+
   if (!snapshot?.data) { showToast("선택한 백업을 찾지 못했습니다."); return; }
-  const payload = { backupType: "SK_Sales_Manager_FullBackup", schemaVersion: snapshot.schemaVersion || STATE_SCHEMA_VERSION, exportedAt: snapshot.exportedAt, reason: snapshot.reasonLabel || dbReasonLabel(snapshot.reason), version: versionLabelForDisplay(APP_VERSION), data: snapshot.data };
+
+  const payload = {
+    backupType: "SK_Sales_Manager_FullBackup",
+    schemaVersion: snapshot.schemaVersion || STATE_SCHEMA_VERSION,
+    exportedAt: snapshot.exportedAt,
+    reason: snapshot.reasonLabel || dbReasonLabel(snapshot.reason),
+    version: versionLabelForDisplay(APP_VERSION),
+    data: snapshot.data
+  };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
-  downloadBlob(`SK_DB_Backup_${String(snapshot.exportedAt || "").slice(0,19).replace(/[:T-]/g, "")}.json`, "application/json;charset=utf-8", blob);
+  downloadBlob(
+    `SK_DB_Backup_${String(snapshot.exportedAt || "").slice(0,19).replace(/[:T-]/g, "")}.json`,
+    "application/json;charset=utf-8",
+    blob
+  );
 }
 
 function attachDbManagementEvents() {
-  $("#dbBackupNowBtn")?.addEventListener("click", () => createDbBackup("manual", { forceExternal: true }));
+  $("#dbBackupNowBtn")?.addEventListener("click", () => createDbBackup("manual"));
   $("#dbRefreshBtn")?.addEventListener("click", refreshDbManagement);
   $("#dbHistoryRefreshBtn")?.addEventListener("click", refreshDbManagement);
   $("#dbSaveSettingsBtn")?.addEventListener("click", saveDbBackupSettings);
@@ -17077,7 +17154,7 @@ function renderLicenseManagement() {
 }
 // ========================================================================
 
-const APP_VERSION = "v1.02";
+const APP_VERSION = "v1.03";
 const STATE_SCHEMA_VERSION = 4;
 
 function normalizeVersionText(version = "") {
