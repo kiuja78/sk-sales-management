@@ -22424,3 +22424,103 @@ body[data-view="settings"] .settings-top-row .user-registration-grid {
       "user" !important;
   }
 }
+/* SUPABASE DB MANAGEMENT V1.03 */
+body[data-view="db"] .db-page-head {
+  align-items: center !important;
+  padding: 4px 0 14px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body[data-view="db"] .db-page-head .eyebrow {
+  margin-bottom: 6px !important;
+  color: #4a7568 !important;
+}
+
+body[data-view="db"] .db-page-description {
+  margin: 0 !important;
+  max-width: 760px !important;
+  color: #5d746b !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+body[data-view="db"] .db-status-grid {
+  margin-top: 0 !important;
+}
+
+body[data-view="db"] .db-status-card-accent {
+  background: linear-gradient(145deg, #f2fbf7 0%, #e8f7f0 100%) !important;
+  border-color: #b9dfcf !important;
+}
+
+body[data-view="db"] .db-status-card-accent strong {
+  color: #246b55 !important;
+}
+
+.db-cloud-panel {
+  border-top: 3px solid #2f8d62 !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fcfa 100%) !important;
+}
+
+.db-cloud-panel > .db-section-head {
+  background: linear-gradient(90deg, rgba(47,141,98,.10), rgba(255,255,255,.9)) !important;
+}
+
+.db-cloud-info-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  padding: 16px 18px 18px !important;
+}
+
+.db-cloud-info-grid > div {
+  min-width: 0 !important;
+  padding: 14px !important;
+  border: 1px solid #dce8e2 !important;
+  border-radius: 12px !important;
+  background: rgba(255,255,255,.86) !important;
+}
+
+.db-cloud-info-grid span,
+.db-cloud-info-grid strong,
+.db-cloud-info-grid small {
+  display: block !important;
+}
+
+.db-cloud-info-grid span {
+  margin-bottom: 6px !important;
+  color: #668077 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+.db-cloud-info-grid strong {
+  color: #1f4f40 !important;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+}
+
+.db-cloud-info-grid small {
+  margin-top: 5px !important;
+  color: #7a8c85 !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+}
+
+body[data-view="db"] .db-history-status.is-ok {
+  color: #22654f !important;
+  background: #e9f7f0 !important;
+}
+
+@media (max-width: 900px) {
+  .db-cloud-info-grid {
+    grid-template-columns: 1fr !important;
+  }
+  body[data-view="db"] .db-page-head {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+}
