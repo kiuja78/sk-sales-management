@@ -22149,3 +22149,77 @@ body[data-view="records"] .record-form-row.row-basic {
   34% { left: 128%; opacity: .15; }
   100% { left: 128%; opacity: 0; }
 }
+/* SK BRAND V1.01 FINAL TITLE TUNE */
+.brand {
+  align-items: flex-start !important;
+}
+
+#sidebarAppTitle {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 5px !important;
+  max-width: 128px !important;
+  white-space: normal !important;
+  line-height: 1 !important;
+  color: #7f2028 !important;
+  text-shadow: none !important;
+}
+
+#sidebarAppTitle .sidebar-app-name {
+  display: block !important;
+  color: #7f2028 !important;
+  font-size: 15px !important;
+  line-height: 1.12 !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+  white-space: nowrap !important;
+}
+
+#sidebarAppTitle .sidebar-version-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 20px !important;
+  padding: 2px 7px 3px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #fff7ef 0%, #ffe0c9 100%) !important;
+  border: 1px solid rgba(214, 79, 64, 0.24) !important;
+  color: #d92c36 !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  box-shadow: 0 4px 10px rgba(194, 69, 59, 0.08) !important;
+}
+
+#sidebarManagerLine {
+  color: #7a3a35 !important;
+  font-weight: 800 !important;
+  margin-top: 6px !important;
+}
+
+.sidebar-credit {
+  color: #813937 !important;
+  font-size: 12px !important;
+}
+.sidebar-credit::before {
+  content: none !important;
+}
+
+.brand-program-icon {
+  animation: skBrandIconBreathe 3.2s ease-in-out infinite !important;
+}
+.brand-program-icon img {
+  animation: skBrandFloat 3.2s ease-in-out infinite !important;
+}
+@keyframes skBrandIconBreathe {
+  0%,100% { transform: translateY(0) scale(1); box-shadow: 0 10px 22px rgba(179,68,59,.13); }
+  50% { transform: translateY(-2px) scale(1.018); box-shadow: 0 14px 28px rgba(179,68,59,.20); }
+}
+
+.digital-clock {
+  color: #244f73 !important;
+}
+.digital-date {
+  color: #526d86 !important;
+}
