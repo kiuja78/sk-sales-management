@@ -1,0 +1,728 @@
+﻿/* V9.94 - rebuilt USER SETTINGS layout. Loaded after styles.css on purpose. */
+
+#settingsView .settings-grid-main {
+  display: grid !important;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  width: min(1080px, calc(100% - 20px)) !important;
+  max-width: 1080px !important;
+  margin: 0 auto !important;
+  align-items: start !important;
+}
+
+#settingsView .settings-grid-main > section.settings-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  align-self: start !important;
+  grid-row: auto !important;
+  grid-area: auto !important;
+}
+
+/* Requested top arrangement: version + user / menu + monthly goal */
+#settingsView .settings-grid-main > section.version-update-card {
+  order: 1 !important;
+  grid-column: 1 / span 4 !important;
+}
+#settingsView .settings-grid-main > section.user-settings-card {
+  order: 2 !important;
+  grid-column: 5 / span 8 !important;
+}
+#settingsView .settings-grid-main > section.menu-settings-card {
+  order: 3 !important;
+  grid-column: 1 / span 4 !important;
+}
+#settingsView .settings-grid-main > section.monthly-goal-card {
+  order: 4 !important;
+  grid-column: 5 / span 8 !important;
+}
+#settingsView .settings-grid-main > section.custom-dashboard-card-settings-card {
+  order: 5 !important;
+  grid-column: 1 / -1 !important;
+  width: 960px !important;
+  max-width: calc(100% - 24px) !important;
+  justify-self: center !important;
+}
+#settingsView .settings-grid-main > section.manager-settings-card {
+  order: 6 !important;
+  grid-column: 1 / -1 !important;
+  width: 940px !important;
+  max-width: calc(100% - 24px) !important;
+  justify-self: center !important;
+}
+#settingsView .settings-grid-main > section.analytics-settings-card {
+  order: 7 !important;
+  grid-column: 1 / -1 !important;
+  width: 960px !important;
+  max-width: calc(100% - 24px) !important;
+  justify-self: center !important;
+}
+#settingsView .settings-grid-main > section.mobile-sync-settings-card {
+  order: 8 !important;
+  grid-column: 1 / -1 !important;
+  width: 960px !important;
+  max-width: calc(100% - 24px) !important;
+  justify-self: center !important;
+}
+
+/* Keep card bodies compact instead of stretching controls */
+#settingsView .version-update-box {
+  width: 260px !important;
+  max-width: 100% !important;
+}
+#settingsView .version-update-actions,
+#settingsView .version-update-card .form-actions {
+  justify-content: flex-start !important;
+}
+
+#settingsView .user-registration-grid {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  justify-content: flex-start !important;
+}
+#settingsView .user-registration-grid > label {
+  flex: 0 0 170px !important;
+  width: 170px !important;
+}
+#settingsView .user-settings-card .section-save-row {
+  justify-content: flex-start !important;
+}
+
+#settingsView .menu-toggle-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(120px, 1fr)) !important;
+  gap: 8px !important;
+}
+#settingsView .menu-toggle-item {
+  min-height: 48px !important;
+  padding: 8px 10px !important;
+}
+#settingsView .menu-settings-card .section-save-row {
+  justify-content: flex-start !important;
+}
+
+/* Monthly goal: fixed-size controls, no empty stretched cells */
+#settingsView .goal-index-layout {
+  display: grid !important;
+  gap: 10px !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  justify-content: start !important;
+}
+#settingsView .goal-index-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  justify-content: flex-start !important;
+  align-items: end !important;
+}
+#settingsView .goal-index-row-main > label:nth-child(1) { width: 150px !important; flex: 0 0 150px !important; }
+#settingsView .goal-index-row-main > label:nth-child(2),
+#settingsView .goal-index-row-main > label:nth-child(3) { width: 158px !important; flex: 0 0 158px !important; }
+#settingsView .goal-index-row-main > label:nth-child(4) { width: 95px !important; flex: 0 0 95px !important; }
+#settingsView .goal-index-row-indexes > label { width: 175px !important; flex: 0 0 175px !important; }
+#settingsView .goal-index-row-weights > label { width: 150px !important; flex: 0 0 150px !important; }
+#settingsView .goal-index-row-package > label { width: 150px !important; flex: 0 0 150px !important; }
+#settingsView .goal-index-row label input,
+#settingsView .goal-index-row label select {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+#settingsView .monthly-goal-card .section-save-row {
+  justify-content: flex-start !important;
+}
+
+/* Custom dashboard cards: rebuilt as 2 x 2 compact editor; product field fixed */
+#settingsView .custom-dashboard-card-settings-card .mobile-sync-help {
+  width: 900px !important;
+  max-width: 100% !important;
+  margin: 0 auto 10px !important;
+}
+#settingsView .custom-dashboard-card-settings {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  width: 900px !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+}
+#settingsView .custom-dashboard-card-settings .custom-card-setting-row {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+  padding: 12px !important;
+  min-width: 0 !important;
+}
+#settingsView .custom-card-setting-head {
+  display: grid !important;
+  grid-template-columns: 64px minmax(0, 1fr) !important;
+  gap: 9px !important;
+  align-items: end !important;
+}
+#settingsView .custom-card-setting-body {
+  display: grid !important;
+  grid-template-columns: 86px 125px 150px !important;
+  gap: 9px !important;
+  justify-content: start !important;
+  align-items: end !important;
+}
+#settingsView .custom-card-setting-head > *,
+#settingsView .custom-card-setting-body > * {
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+}
+#settingsView .custom-card-fixed-field > span {
+  display: flex !important;
+  align-items: center !important;
+  min-height: 38px !important;
+  padding: 0 10px !important;
+  border: 1px solid #d4dfdb !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+#settingsView .custom-dashboard-card-settings-card .section-save-row {
+  width: 900px !important;
+  max-width: 100% !important;
+  margin: 12px auto 0 !important;
+  justify-content: flex-end !important;
+}
+
+/* Manager registration: compact 3-line layout */
+#settingsView .manager-data-safety-guide,
+#settingsView .manager-settings-card .settings-list,
+#settingsView .manager-settings-card .section-save-row {
+  width: 880px !important;
+  max-width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+#settingsView .manager-settings-card .manager-row.manager-team-row {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 11px 12px !important;
+  margin: 0 !important;
+  gap: 8px !important;
+}
+#settingsView .manager-settings-card .manager-line-primary {
+  display: grid !important;
+  grid-template-columns: 40px 240px 80px 130px 86px !important;
+  gap: 8px !important;
+  justify-content: start !important;
+  align-items: end !important;
+}
+#settingsView .manager-settings-card .manager-line-secondary {
+  display: grid !important;
+  grid-template-columns: 360px 96px 150px !important;
+  gap: 8px !important;
+  justify-content: start !important;
+  align-items: end !important;
+}
+#settingsView .manager-settings-card .manager-order-control {
+  width: 40px !important;
+  min-width: 40px !important;
+}
+#settingsView .manager-settings-card .manager-order-number {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  font-size: 11px !important;
+}
+#settingsView .manager-settings-card .manager-order-button {
+  width: 18px !important;
+  min-width: 18px !important;
+  height: 17px !important;
+  padding: 0 !important;
+  font-size: 9px !important;
+}
+#settingsView .manager-settings-card .manager-line-primary label,
+#settingsView .manager-settings-card .manager-line-secondary label {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+#settingsView .manager-settings-card .manager-history-details {
+  width: max-content !important;
+  max-width: 100% !important;
+}
+#settingsView .manager-settings-card .section-save-row {
+  justify-content: flex-end !important;
+}
+
+/* Management evaluation: shrink each work area to content width */
+#settingsView .analytics-guide-settings {
+  display: grid !important;
+  gap: 12px !important;
+  width: 880px !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+}
+#settingsView .analytics-setting-step {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+#settingsView .analytics-choice-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  padding: 10px !important;
+}
+#settingsView .analytics-choice-card {
+  flex: 0 0 250px !important;
+  width: 250px !important;
+  min-width: 250px !important;
+  max-width: 250px !important;
+}
+#settingsView .analytics-month-picker {
+  flex: 0 0 155px !important;
+  width: 155px !important;
+  min-width: 155px !important;
+}
+#settingsView .analytics-setting-rows {
+  display: grid !important;
+  gap: 8px !important;
+  padding: 0 10px 10px !important;
+}
+#settingsView .analytics-setting-row {
+  width: max-content !important;
+  max-width: 100% !important;
+  justify-content: start !important;
+}
+#settingsView .analytics-month-status-row {
+  display: grid !important;
+  grid-template-columns: 95px auto !important;
+  width: 360px !important;
+}
+#settingsView .analytics-alias-row {
+  display: grid !important;
+  grid-template-columns: 165px 20px 165px 125px 38px !important;
+  width: 555px !important;
+  max-width: 100% !important;
+  gap: 7px !important;
+  align-items: end !important;
+}
+#settingsView .analytics-seller-start-row {
+  display: grid !important;
+  grid-template-columns: 110px 175px 135px !important;
+  width: 440px !important;
+  max-width: 100% !important;
+  gap: 8px !important;
+}
+#settingsView .analytics-check-grid {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 7px !important;
+  justify-content: flex-start !important;
+}
+#settingsView .analytics-settings-card .section-save-row {
+  width: 880px !important;
+  max-width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  justify-content: flex-end !important;
+}
+
+#settingsView .mobile-sync-grid,
+#settingsView .mobile-sync-settings-card .mobile-sync-help,
+#settingsView .mobile-sync-settings-card .section-save-row {
+  width: 880px !important;
+  max-width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+@media (max-width: 1120px) {
+  #settingsView .settings-grid-main {
+    width: min(920px, calc(100% - 16px)) !important;
+  }
+  #settingsView .settings-grid-main > section.version-update-card,
+  #settingsView .settings-grid-main > section.user-settings-card,
+  #settingsView .settings-grid-main > section.menu-settings-card,
+  #settingsView .settings-grid-main > section.monthly-goal-card {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 760px) {
+  #settingsView .settings-grid-main {
+    grid-template-columns: 1fr !important;
+  }
+  #settingsView .custom-dashboard-card-settings {
+    grid-template-columns: 1fr !important;
+  }
+  #settingsView .custom-card-setting-head,
+  #settingsView .custom-card-setting-body,
+  #settingsView .manager-settings-card .manager-line-primary,
+  #settingsView .manager-settings-card .manager-line-secondary,
+  #settingsView .analytics-alias-row,
+  #settingsView .analytics-seller-start-row {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+  #settingsView .goal-index-row,
+  #settingsView .goal-index-layout {
+    width: 100% !important;
+  }
+  #settingsView .goal-index-row > label {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+}
+
+/* Neutralize legacy grid placements inside the rebuilt condition-card editor. */
+#settingsView .custom-dashboard-card-settings .custom-card-setting-row .custom-card-enable,
+#settingsView .custom-dashboard-card-settings .custom-card-setting-row label:has(.custom-card-title),
+#settingsView .custom-dashboard-card-settings .custom-card-setting-row label:has(.custom-card-field),
+#settingsView .custom-dashboard-card-settings .custom-card-setting-row label:has(.custom-card-operator),
+#settingsView .custom-dashboard-card-settings .custom-card-setting-row label:has(.custom-card-value) {
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+
+/* V9.98: 매니저별 대시보드 조건·100점 프로모션 현황 */
+.manager-condition-summary {
+  margin-top: 18px;
+  border-top: 1px solid #dce6ef;
+  padding-top: 16px;
+}
+.manager-condition-summary-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:10px;
+}
+.manager-condition-summary-head h3 {
+  margin:0;
+  font-size:16px;
+  color:#173558;
+}
+.manager-condition-summary-head p {
+  margin:4px 0 0;
+  font-size:12px;
+  color:#66788a;
+}
+.manager-condition-promo-period {
+  padding:6px 10px;
+  border-radius:999px;
+  background:#eef8e9;
+  color:#4c7c38;
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.manager-condition-summary-empty {
+  padding:16px;
+  border:1px solid #dce6ef;
+  border-radius:10px;
+  color:#68798a;
+  background:#fbfcfd;
+  text-align:center;
+}
+.manager-condition-table-wrap {
+  overflow-x:auto;
+}
+.manager-condition-table {
+  width:100%;
+  min-width:720px;
+  table-layout:auto;
+  border-collapse:collapse;
+}
+.manager-condition-table th,
+.manager-condition-table td {
+  padding:9px 10px;
+  border:1px solid #dce4ec;
+  text-align:center;
+  vertical-align:middle;
+  white-space:nowrap;
+}
+.manager-condition-table thead th {
+  font-size:12px;
+  font-weight:800;
+  background:#f7fafc;
+  color:#40566c;
+}
+.manager-condition-table thead .condition-group-head {
+  background:#eaf3ff;
+  color:#245c91;
+}
+.manager-condition-table thead .promo-group-head {
+  background:#edf7e8;
+  color:#4d7938;
+}
+.manager-condition-table .condition-col {
+  background:#f5f9ff;
+}
+.manager-condition-table .promo-col {
+  background:#f7fbf3;
+}
+.manager-condition-table .manager-condition-name {
+  text-align:left;
+  font-weight:800;
+  min-width:92px;
+}
+.manager-condition-table .condition-value {
+  color:#245f98;
+  font-weight:800;
+}
+.manager-condition-table .promo-value {
+  color:#4c7d36;
+  font-weight:800;
+}
+.manager-condition-table .promo-total-value {
+  background:#eef7e8;
+}
+.manager-condition-table .manager-condition-total-row td {
+  background:#f3f6f9;
+  font-weight:800;
+}
+@media (max-width: 900px) {
+  .manager-condition-summary-head {
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
+
+/* V9.98 dashboard section headings */
+.dashboard-section-heading .eyebrow { margin:0 0 2px; color:#648076; font-size:10px; font-weight:850; letter-spacing:.08em; }
+.dashboard-section-heading h3 { margin:0; font-size:18px; color:#173d30; font-weight:900; }
+
+/* V9.98 FINAL TOP SETTINGS LAYOUT: 3 cards on one row */
+#settingsView .settings-grid-main > section.version-update-card,
+#settingsView .settings-grid-main > section.user-settings-card,
+#settingsView .settings-grid-main > section.menu-settings-card {
+  grid-column: span 4 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Version card: keep current/latest side-by-side and compact */
+#settingsView .version-update-card .version-update-box {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 10px 12px !important;
+  box-sizing: border-box !important;
+}
+#settingsView .version-update-card .version-update-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  align-items: center !important;
+  min-height: 48px !important;
+  box-sizing: border-box !important;
+}
+#settingsView .version-update-card .version-update-row span,
+#settingsView .version-update-card .version-update-row strong {
+  white-space: nowrap !important;
+}
+#settingsView .version-update-card .version-update-row span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+#settingsView .version-update-card .version-update-row strong {
+  text-align: right !important;
+  font-size: 17px !important;
+}
+#settingsView .version-update-card .version-update-actions {
+  margin-top: 8px !important;
+  gap: 8px !important;
+}
+
+/* User registration: compact three fields instead of stretching across the card */
+#settingsView .user-registration-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+#settingsView .user-registration-grid > label {
+  width: auto !important;
+  min-width: 0 !important;
+  flex: none !important;
+}
+#settingsView .user-registration-grid input {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Menu visibility: compact 2x2 grid */
+#settingsView .menu-settings-card .menu-toggle-grid {
+  width: 100% !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* Monthly goal remains directly below the top 3 cards */
+#settingsView .settings-grid-main > section.monthly-goal-card {
+  grid-column: 1 / -1 !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  justify-self: start !important;
+}
+
+@media (max-width: 1120px) and (min-width: 761px) {
+  #settingsView .settings-grid-main > section.version-update-card,
+  #settingsView .settings-grid-main > section.user-settings-card,
+  #settingsView .settings-grid-main > section.menu-settings-card {
+    grid-column: span 4 !important;
+  }
+}
+
+/* V9.98 version panel readability fix: keep each version item horizontal */
+#settingsView .version-update-card .version-update-box {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+  box-sizing: border-box !important;
+}
+#settingsView .version-update-card .version-update-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  min-height: 48px !important;
+  padding: 8px 10px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+}
+#settingsView .version-update-card .version-update-row span {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+#settingsView .version-update-card .version-update-row strong {
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+}
+#settingsView .version-update-card .version-update-actions {
+  grid-column: 1 / -1 !important;
+  margin-top: 0 !important;
+}
+
+
+/* V9.99 version panel final override: keep label and value horizontal */
+#settingsView .version-update-card .version-update-box {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 10px !important;
+  box-sizing: border-box !important;
+}
+#settingsView .version-update-card .version-update-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+}
+#settingsView .version-update-card .version-update-row span,
+#settingsView .version-update-card .version-update-row strong {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  writing-mode: horizontal-tb !important;
+  transform: none !important;
+}
+#settingsView .version-update-card .version-update-row strong {
+  margin-left: auto !important;
+  flex: 0 0 auto !important;
+}
+
+
+/* V10.12 team settings: full-width, readable, and independent from the 12-column legacy grid. */
+#settingsView .settings-grid-main > section.team-settings-card {
+  order: 6 !important;
+  grid-column: 1 / -1 !important;
+  width: 940px !important;
+  max-width: calc(100% - 24px) !important;
+  justify-self: center !important;
+}
+
+#settingsView .team-settings-list {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(260px, 1fr)) !important;
+  gap: 10px !important;
+  width: 100% !important;
+  max-width: 900px !important;
+  margin: 0 auto !important;
+}
+
+#settingsView .team-setting-row {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) auto !important;
+  gap: 8px !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+#settingsView .team-setting-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border: 1px solid #d7e5df;
+  border-radius: 10px;
+  font-weight: 800;
+  background: #f8fbfa;
+}
+
+#settingsView .team-setting-name {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+#settingsView .team-preset-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px auto 12px;
+  width: min(900px, 100%);
+  font-size: 12px;
+  color: #587267;
+}
+
+#settingsView .team-preset-actions > span {
+  font-weight: 800;
+  margin-right: 2px;
+}
+
+#settingsView .team-settings-card .section-save-row {
+  justify-content: flex-start !important;
+}
+
+@media (max-width: 760px) {
+  #settingsView .settings-grid-main > section.team-settings-card {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  #settingsView .team-settings-list {
+    grid-template-columns: 1fr !important;
+  }
+}

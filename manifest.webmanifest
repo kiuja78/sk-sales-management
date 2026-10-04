@@ -1,0 +1,11 @@
+{
+  "name": "SK 영업관리시스템",
+  "short_name": "SK 영업관리",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f2f7f4",
+  "theme_color": "#2f6b56",
+  "icons": [
+    {"src":"./assets/sales_manager_icon.png","sizes":"512x512","type":"image/png"}
+  ]
+}
