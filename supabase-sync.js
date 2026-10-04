@@ -225,6 +225,115 @@
     return saveState(snapshot);
   }
 
+  async function getStatus() {
+    await ensureSignedIn();
+    const { data, error } = await ensureClient()
+      .from("sk_app_state")
+      .select("revision, updated_at")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+    if (error) throw error;
+    return {
+      connected: true,
+      exists: Boolean(data),
+      revision: Number(data?.revision || 0),
+      updatedAt: String(data?.updated_at || ""),
+      userEmail: String(currentUser?.email || "")
+    };
+  }
+
+  async function createBackup(snapshot, meta = {}) {
+    await ensureSignedIn();
+    const payload = {
+      user_id: currentUser.id,
+      data: snapshot,
+      revision: Number(snapshot?.appMeta?.persistRevision || meta.revision || 0),
+      reason: String(meta.reason || "manual"),
+      reason_label: String(meta.reasonLabel || "수동 백업"),
+      record_count: Number(meta.recordCount || 0),
+      manager_count: Number(meta.managerCount || 0),
+      data_count: Number(meta.dataCount || 0)
+    };
+    const { data, error } = await ensureClient()
+      .from("sk_app_backups")
+      .insert(payload)
+      .select("id, created_at, revision")
+      .single();
+    if (error) throw error;
+    return {
+      id: String(data?.id || ""),
+      createdAt: String(data?.created_at || ""),
+      revision: Number(data?.revision || payload.revision)
+    };
+  }
+
+  async function listBackups(limit = 200) {
+    await ensureSignedIn();
+    const safeLimit = Math.max(1, Math.min(1000, Number(limit || 200)));
+    const { data, error } = await ensureClient()
+      .from("sk_app_backups")
+      .select("id, revision, reason, reason_label, record_count, manager_count, data_count, created_at")
+      .eq("user_id", currentUser.id)
+      .order("created_at", { ascending: false })
+      .limit(safeLimit);
+    if (error) throw error;
+    return (Array.isArray(data) ? data : []).map((row) => ({
+      id: String(row.id || ""),
+      revision: Number(row.revision || 0),
+      reason: String(row.reason || "manual"),
+      reasonLabel: String(row.reason_label || "백업"),
+      recordCount: Number(row.record_count || 0),
+      managerCount: Number(row.manager_count || 0),
+      dataCount: Number(row.data_count || 0),
+      createdAt: String(row.created_at || "")
+    }));
+  }
+
+  async function getBackup(id) {
+    await ensureSignedIn();
+    const { data, error } = await ensureClient()
+      .from("sk_app_backups")
+      .select("id, data, revision, reason, reason_label, record_count, manager_count, data_count, created_at")
+      .eq("user_id", currentUser.id)
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return {
+      id: String(data.id || ""),
+      data: data.data && typeof data.data === "object" ? data.data : null,
+      revision: Number(data.revision || 0),
+      reason: String(data.reason || "manual"),
+      reasonLabel: String(data.reason_label || "백업"),
+      recordCount: Number(data.record_count || 0),
+      managerCount: Number(data.manager_count || 0),
+      dataCount: Number(data.data_count || 0),
+      createdAt: String(data.created_at || "")
+    };
+  }
+
+  async function cleanupBackups(retentionDays = 30, maxBackups = 100) {
+    await ensureSignedIn();
+    const rows = await listBackups(1000);
+    const cutoff = Date.now() - Math.max(1, Number(retentionDays || 30)) * 86400000;
+    const keepMax = Math.max(1, Number(maxBackups || 100));
+    const removeIds = rows
+      .filter((row, index) => {
+        const t = Date.parse(row.createdAt || "");
+        return index >= keepMax || (Number.isFinite(t) && t < cutoff);
+      })
+      .map((row) => row.id)
+      .filter(Boolean);
+    if (!removeIds.length) return 0;
+    const { error } = await ensureClient()
+      .from("sk_app_backups")
+      .delete()
+      .eq("user_id", currentUser.id)
+      .in("id", removeIds);
+    if (error) throw error;
+    return removeIds.length;
+  }
+
   async function signOut() {
     if (!client) return;
     await client.auth.signOut();
@@ -239,6 +348,11 @@
     loadState,
     saveState,
     seedIfMissing,
+    getStatus,
+    createBackup,
+    listBackups,
+    getBackup,
+    cleanupBackups,
     signOut,
     user: () => currentUser
   });
