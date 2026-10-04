@@ -3,8 +3,6 @@ const CORE = [
   "./",
   "./index.html",
   "./app.js",
-  "./supabase-config.js",
-  "./supabase-sync.js",
   "./styles.css",
   "./settings-v994.css",
   "./assets/sales_manager_icon.png",

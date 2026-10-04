@@ -43,13 +43,14 @@ button {
 
 .sidebar {
   background:
-    radial-gradient(circle at 20% 10%, rgba(118, 221, 190, 0.55), transparent 30%),
-    radial-gradient(circle at 90% 24%, rgba(150, 128, 255, 0.45), transparent 28%),
-    radial-gradient(circle at 35% 92%, rgba(255, 177, 93, 0.35), transparent 30%),
-    linear-gradient(165deg, #10221d 0%, #182035 48%, #13271f 100%);
-  color: #f3f7f4;
+    radial-gradient(circle at 14% 10%, rgba(255, 255, 255, 0.28), transparent 26%),
+    radial-gradient(circle at 88% 18%, rgba(255, 166, 72, 0.30), transparent 24%),
+    radial-gradient(circle at 20% 86%, rgba(255, 214, 179, 0.38), transparent 28%),
+    linear-gradient(180deg, #fff4ec 0%, #ffd8b7 22%, #ff9f63 56%, #f65055 100%);
+  color: #5a1818;
   padding: 24px;
   gap: 28px;
+  box-shadow: inset -1px 0 0 rgba(255,255,255,0.35);
 }
 
 .brand {
@@ -61,12 +62,13 @@ button {
 .brand-mark {
   width: 42px;
   height: 42px;
-  border-radius: 8px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
-  background: #d7eadf;
-  color: #14221d;
+  background: rgba(255,255,255,0.78);
+  color: #8d1b1f;
   font-weight: 800;
+  box-shadow: 0 10px 20px rgba(207, 62, 56, 0.16), inset 0 0 0 1px rgba(255,255,255,0.55);
 }
 
 .brand strong,
@@ -76,7 +78,7 @@ button {
 
 .brand span,
 .muted {
-  color: #98aaa0;
+  color: rgba(96, 33, 28, 0.72);
   font-size: 13px;
 }
 
@@ -86,18 +88,22 @@ button {
 }
 
 .nav-item {
-  border: 0;
-  color: #d8e4de;
-  background: transparent;
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(92, 24, 24, 0.92);
+  background: rgba(255,255,255,0.18);
   text-align: left;
   padding: 12px 14px;
   border-radius: var(--radius);
+  backdrop-filter: blur(6px);
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease, color .18s ease;
 }
 
 .nav-item.active,
 .nav-item:hover {
-  background: #20382f;
-  color: #ffffff;
+  background: rgba(255,255,255,0.88);
+  color: #da222c;
+  box-shadow: 0 12px 28px rgba(222, 67, 58, 0.18);
+  transform: translateX(2px);
 }
 
 .side-card {
@@ -4801,14 +4807,14 @@ body[data-view="records"] .record-table .memo-col {
 .sidebar-clock-card {
   margin: 0 8px 0 !important;
   padding: 12px 10px 10px !important;
-  border: 1px solid rgba(158, 215, 189, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.42) !important;
   border-radius: 14px !important;
   background:
-    radial-gradient(circle at top left, rgba(71, 163, 120, 0.26), transparent 48%),
-    linear-gradient(180deg, rgba(9, 37, 28, 0.94), rgba(4, 18, 15, 0.96)) !important;
+    radial-gradient(circle at top left, rgba(255,255,255,0.42), transparent 48%),
+    linear-gradient(180deg, rgba(255,245,239,0.95), rgba(255,223,200,0.94)) !important;
   box-shadow:
-    inset 0 0 18px rgba(82, 255, 180, 0.07),
-    0 10px 22px rgba(0, 0, 0, 0.16) !important;
+    inset 0 0 16px rgba(255,255,255,0.35),
+    0 10px 22px rgba(207, 86, 57, 0.14) !important;
   text-align: center !important;
 }
 
@@ -4818,10 +4824,10 @@ body[data-view="records"] .record-table .memo-col {
   line-height: 1 !important;
   font-weight: 900 !important;
   letter-spacing: 0.04em !important;
-  color: #8fffc8 !important;
+  color: #d81f2a !important;
   text-shadow:
-    0 0 6px rgba(143, 255, 200, 0.55),
-    0 0 14px rgba(57, 211, 135, 0.28) !important;
+    0 0 4px rgba(255,255,255,0.68),
+    0 0 10px rgba(255,137,83,0.18) !important;
 }
 
 .digital-date {
@@ -4829,15 +4835,15 @@ body[data-view="records"] .record-table .memo-col {
   font-family: "Consolas", "Courier New", monospace !important;
   font-weight: 800 !important;
   letter-spacing: 0.06em !important;
-  color: rgba(216, 255, 235, 0.82) !important;
+  color: rgba(109, 45, 38, 0.78) !important;
 }
 
 .sidebar-credit {
   margin: 8px 8px 0 !important;
   padding: 8px 8px !important;
   border-radius: 11px !important;
-  background: rgba(255, 255, 255, 0.07) !important;
-  color: rgba(245, 255, 250, 0.92) !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: rgba(94, 26, 24, 0.88) !important;
   font-size: 12px !important;
   font-weight: 800 !important;
   line-height: 1.25 !important;

@@ -1515,54 +1515,18 @@ async function loadPersistedState() {
   const durable = await readDurableBackupSnapshot();
   let candidate = local || (isCorePersistedState(backup) ? backup : null);
   if (isCorePersistedState(durable?.data) && (!candidate || comparePersistenceVersion(durable.data, candidate) > 0)) candidate = durable.data;
-
-  let cloud = null;
-  if (!IS_PC_APP && window.SKCloud?.enabled?.()) {
-    try {
-      cloud = await window.SKCloud.loadState();
-      if (isCorePersistedState(cloud?.data)) {
-        // 웹판은 Supabase를 중앙 원본으로 사용합니다. 로컬/IndexedDB는 안전 캐시입니다.
-        candidate = cloud.data;
-        cacheCommittedState(candidate);
-        try { await writeDurableBackupSnapshot(candidate, "cloud-load"); } catch (_) {}
-      }
-    } catch (error) {
-      console.error("[SK CLOUD] startup load failed", error);
-      throw new Error("Supabase에서 SK 데이터를 불러오지 못했습니다. 인터넷 연결 후 다시 시도해 주세요.");
-    }
-  }
-
   persistenceBaseState = candidate ? structuredClone(candidate) : null;
   if (candidate) {
     const schema = Number(candidate?.appMeta?.stateSchemaVersion || candidate?.schemaVersion || 0);
     state = schema === STATE_SCHEMA_VERSION ? candidate : normalizeState(candidate);
   } else state = structuredClone(sampleState);
-
   state.appMeta = state.appMeta && typeof state.appMeta === "object" ? state.appMeta : {};
   state.menuVisibility = normalizeMenuVisibility(state.menuVisibility);
   state.teamNames = Array.isArray(state.teamNames) && state.teamNames.length ? state.teamNames : ["A팀"];
   invalidateManagerCaches();
   touchStateRevision();
-
-  // 최초 로그인 계정에 클라우드 행이 아직 없으면 현재 정상 상태를 1회 초기값으로 등록합니다.
-  if (!IS_PC_APP && window.SKCloud?.enabled?.() && cloud && !cloud.exists) {
-    try {
-      const seeded = await window.SKCloud.seedIfMissing(state);
-      if (seeded?.conflict) {
-        const latest = await window.SKCloud.loadState();
-        if (isCorePersistedState(latest?.data)) {
-          state = normalizeState(latest.data);
-          persistenceBaseState = structuredClone(state);
-          cacheCommittedState(state);
-        }
-      } else {
-        persistenceBaseState = structuredClone(state);
-      }
-    } catch (error) {
-      console.error("[SK CLOUD] initial seed failed", error);
-      throw new Error("Supabase 초기 데이터 저장에 실패했습니다.");
-    }
-  }
+  // Do not write an old startup candidate over a concurrent tab's newer save.
+  // The next explicit save performs the guarded commit and mirrors both stores.
 }
 
 function restoreFromDurableBackupInBackground() {
@@ -1665,29 +1629,6 @@ async function commitDurableState(snapshot, baseline) {
 
 async function commitWebState(snapshot) {
   const commit = async () => {
-    if (window.SKCloud?.enabled?.()) {
-      let cloudResult;
-      try {
-        cloudResult = await window.SKCloud.saveState(snapshot);
-      } catch (error) {
-        console.error("[SK CLOUD] save failed", error);
-        return persistenceFailure(false, "Supabase 저장에 실패했습니다. 인터넷 연결을 확인한 뒤 다시 저장해 주세요.");
-      }
-      if (cloudResult?.conflict) {
-        return persistenceFailure(true, "다른 PC 또는 창에서 더 최신 데이터가 저장되었습니다. 새로고침 후 다시 확인해 주세요.");
-      }
-      if (!cloudResult?.ok) return persistenceFailure(false, "Supabase 저장에 실패했습니다.");
-
-      // 중앙 저장 성공 후 현재 PC에도 안전 캐시를 남깁니다.
-      const localOk = cacheCommittedState(snapshot);
-      try { await writeDurableBackupSnapshot(snapshot, "cloud-commit"); }
-      catch (error) { console.warn("[SK CLOUD] local durable mirror failed", error); }
-      persistenceBaseState = snapshot;
-      persistenceErrorMessage = "";
-      if (localOk) safeLocalBackupSnapshot(snapshot, "persist-current");
-      return { ok: true, cloud: true, local: localOk, durable: true };
-    }
-
     const local = readBrowserState();
     if (persistenceConflicts(local, persistenceBaseState)) return persistenceFailure(true);
     let durable = null;
@@ -1701,7 +1642,9 @@ async function commitWebState(snapshot) {
     if (localOk) safeLocalBackupSnapshot(snapshot, "persist-current");
     return { ok: true, local: localOk, durable: Boolean(durable?.ok) };
   };
+  // Serializes both the IndexedDB commit and its localStorage mirror across tabs.
   if (navigator.locks?.request) return navigator.locks.request(`${STORAGE_KEY}-persist`, commit);
+  // IndexedDB's read/write transaction still performs the conflict check atomically.
   return commit();
 }
 
@@ -17054,7 +16997,7 @@ function renderLicenseManagement() {
 }
 // ========================================================================
 
-const APP_VERSION = "v1.01";
+const APP_VERSION = "v1.00";
 const STATE_SCHEMA_VERSION = 4;
 
 function normalizeVersionText(version = "") {
@@ -17136,22 +17079,7 @@ function initStartupIntro() {
 async function init() {
   initStartupIntro();
   startSidebarClock();
-  if (!IS_PC_APP && window.SKCloud?.enabled?.()) {
-    try {
-      await window.SKCloud.ensureSignedIn();
-    } catch (error) {
-      console.error("[SK CLOUD] login init failed", error);
-      window.alert("SK 클라우드 로그인 준비에 실패했습니다. 페이지를 새로고침해 주세요.");
-      return;
-    }
-  }
-  try {
-    await loadPersistedState();
-  } catch (error) {
-    console.warn("[STARTUP] state load failed", error);
-    window.alert(error?.message || "저장 데이터를 불러오지 못했습니다.");
-    return;
-  }
+  try { await loadPersistedState(); } catch (error) { console.warn("[STARTUP] state load failed", error); state = loadState(); }
   // 프로그램을 새로 열 때는 저장된 과거 월이나 테스트용 고정 날짜가 아니라
   // 실제 PC의 현재 날짜 기준 월로 대시보드를 시작한다.
   const month = monthIso();
