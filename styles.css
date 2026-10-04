@@ -22223,3 +22223,123 @@ body[data-view="records"] .record-form-row.row-basic {
 .digital-date {
   color: #526d86 !important;
 }
+/* SK SETTINGS TOP ROW V1.02 */
+body[data-view="settings"] .settings-page-head,
+body[data-view="settings"] .settings-grid-main {
+  max-width: 1180px !important;
+}
+
+body[data-view="settings"] .settings-grid-main {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  align-items: start !important;
+}
+
+body[data-view="settings"] .menu-settings-card {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  border-top: 3px solid #2f8d62 !important;
+}
+
+body[data-view="settings"] .team-operation-settings-card {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  border-top: 3px solid #7d63d8 !important;
+  background: linear-gradient(180deg, #ffffff 0%, #faf8ff 100%) !important;
+}
+
+body[data-view="settings"] .team-operation-settings-card > .panel-head {
+  background: linear-gradient(90deg, rgba(125,99,216,.13), rgba(255,255,255,.9)) !important;
+}
+
+body[data-view="settings"] .user-settings-card {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  border-top: 3px solid #2b74d7 !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%) !important;
+}
+
+body[data-view="settings"] .user-settings-card > .panel-head {
+  background: linear-gradient(90deg, rgba(43,116,215,.12), rgba(255,255,255,.9)) !important;
+}
+
+body[data-view="settings"] .settings-grid-main > .settings-card:not(.menu-settings-card):not(.team-operation-settings-card):not(.user-settings-card) {
+  grid-column: 1 / -1 !important;
+  grid-row: auto !important;
+}
+
+body[data-view="settings"] .menu-settings-card .menu-toggle-grid {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  padding: 12px 14px 0 !important;
+}
+
+body[data-view="settings"] .menu-settings-card .menu-toggle-item {
+  min-height: 42px !important;
+}
+
+.team-operation-settings-body {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+}
+
+.team-operation-month-field {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted, #5b6b65);
+}
+
+.team-operation-month-field input {
+  min-height: 40px;
+}
+
+.team-operation-settings-card .goal-team-operation-buttons {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.team-operation-settings-card .goal-team-operation-buttons button {
+  min-height: 42px !important;
+  width: 100% !important;
+}
+
+.team-operation-settings-help {
+  margin: 0 !important;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(125,99,216,.07);
+  color: #5f5b72 !important;
+}
+
+body[data-view="settings"] .user-settings-card .user-registration-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  padding: 12px 14px 0 !important;
+  gap: 10px !important;
+}
+
+body[data-view="settings"] .user-settings-card .settings-help-text {
+  padding: 0 14px !important;
+}
+
+body[data-view="settings"] .monthly-goal-card .goal-index-layout {
+  grid-template-columns: 1fr !important;
+}
+
+@media (max-width: 1100px) {
+  body[data-view="settings"] .settings-grid-main {
+    grid-template-columns: 1fr !important;
+  }
+  body[data-view="settings"] .menu-settings-card,
+  body[data-view="settings"] .team-operation-settings-card,
+  body[data-view="settings"] .user-settings-card,
+  body[data-view="settings"] .settings-grid-main > .settings-card:not(.menu-settings-card):not(.team-operation-settings-card):not(.user-settings-card) {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+}
