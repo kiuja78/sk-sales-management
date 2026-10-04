@@ -8963,7 +8963,7 @@ function renderTopbar() {
   if (sidebarManagerLine) sidebarManagerLine.textContent = managerLine;
 
   const sidebarAppTitle = $("#sidebarAppTitle");
-  if (sidebarAppTitle) sidebarAppTitle.textContent = `영업관리 시스템 ${versionLabelForDisplay(APP_VERSION)}`;
+  if (sidebarAppTitle) sidebarAppTitle.innerHTML = `<span class="sidebar-app-name">영업관리 시스템</span><span class="sidebar-version-badge">${versionLabelForDisplay(APP_VERSION)}</span>`;
   applyProgramVersionToStaticLabels();
 
   const titles = {
