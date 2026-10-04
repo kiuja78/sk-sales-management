@@ -925,7 +925,7 @@ const sellerRoles = ["", "지국장", "팀장"];
 const membershipContactRoles = ["", "매니저", "지국장", "팀장", "고객센터"];
 const statuses = ["접수", "요청", "확인", "완료", "보류", "취소"];
 const settingsEditMode = { user: false, manager: false, team: false, goal: false };
-const OPTIONAL_MENU_DEFAULTS = { checklist: true, contactnote: false, contactrequest: false, renewalguide: true };
+const OPTIONAL_MENU_DEFAULTS = { checklist: true, analytics: true, evaluation: true, renewalguide: true, payroll: true, contactnote: false, contactrequest: false };
 let managerSettingsDeletedIds = new Set();
 
 function normalizeMenuVisibility(value = {}) {
@@ -12318,10 +12318,16 @@ function setMasterTeamForMonth(team, effectiveMonth) {
   state.appMeta.userTeam = normalizedTeam;
 }
 
+function teamOperationSettingsMonth() {
+  return normalizeManagerMonth($("#teamOperationEffectiveMonth")?.value)
+    || currentDashboardMonth()
+    || monthIso();
+}
+
 function setTeamOperationMode(mode, effectiveMonth = "") {
   const normalized = String(mode) === "2" ? "2" : "1";
   if (!state.appMeta) state.appMeta = {};
-  const month = normalizeManagerMonth(effectiveMonth) || goalSettingsMonth() || currentDashboardMonth() || monthIso();
+  const month = normalizeManagerMonth(effectiveMonth) || teamOperationSettingsMonth();
   const history = teamOperationHistory().map((item) => ({ ...item }));
   const currentEntry = historyEntryForMonth(history, monthIso(), "value");
 
@@ -12356,7 +12362,9 @@ function setTeamOperationMode(mode, effectiveMonth = "") {
 }
 
 function renderTeamOperationSettings() {
-  const mode = teamOperationMode(goalSettingsMonth());
+  const effectiveInput = $("#teamOperationEffectiveMonth");
+  if (effectiveInput && !effectiveInput.value) effectiveInput.value = currentDashboardMonth();
+  const mode = teamOperationMode(teamOperationSettingsMonth());
   const single = $("#teamOperationSingleBtn");
   const dual = $("#teamOperationDualBtn");
   [single, dual].forEach((button) => {
@@ -12389,16 +12397,17 @@ function renderSettings() {
   }
   const masterTeamWrap = masterTeamInput?.closest("label");
   const masterTeamMonthWrap = masterTeamEffectiveMonth?.closest("label");
-  const isDualOperation = teamOperationMode(currentDashboardMonth()) === "2";
+  const isDualOperation = teamOperationMode(teamOperationSettingsMonth()) === "2";
   if (masterTeamWrap) masterTeamWrap.hidden = !isDualOperation;
   if (masterTeamMonthWrap) masterTeamMonthWrap.hidden = !isDualOperation;
   if (masterTeamInput) masterTeamInput.disabled = !isDualOperation || !settingsEditMode.user;
   if (masterTeamEffectiveMonth) masterTeamEffectiveMonth.disabled = !isDualOperation || !settingsEditMode.user;
   const menuVisibility = optionalMenuVisibility();
   if ($("#menuVisibilityChecklist")) $("#menuVisibilityChecklist").checked = menuVisibility.checklist;
-  if ($("#menuVisibilityContactNote")) $("#menuVisibilityContactNote").checked = menuVisibility.contactnote;
-  if ($("#menuVisibilityContactRequest")) $("#menuVisibilityContactRequest").checked = menuVisibility.contactrequest;
+  if ($("#menuVisibilityAnalytics")) $("#menuVisibilityAnalytics").checked = menuVisibility.analytics;
+  if ($("#menuVisibilityEvaluation")) $("#menuVisibilityEvaluation").checked = menuVisibility.evaluation;
   if ($("#menuVisibilityRenewalGuide")) $("#menuVisibilityRenewalGuide").checked = menuVisibility.renewalguide;
+  if ($("#menuVisibilityPayroll")) $("#menuVisibilityPayroll").checked = menuVisibility.payroll;
   renderGoalSettingsForMonth($("#goalMonthInput")?.value || $("#monthFilter").value);
   renderCustomDashboardCardSettings();
   renderTeamOperationSettings();
@@ -12959,7 +12968,7 @@ function collectUserSettings() {
     masterName: $("#masterNameInput").value.trim(),
     masterRole: $("#masterRoleInput").value.trim() || "마스터"
   };
-  const mode = teamOperationMode(currentDashboardMonth());
+  const mode = teamOperationMode(teamOperationSettingsMonth());
   const teamInput = $("#masterTeamInput");
   const effectiveInput = $("#masterTeamEffectiveMonth");
   if (mode === "2" && teamInput) {
@@ -12973,13 +12982,16 @@ function collectUserSettings() {
 function saveMenuVisibilitySettings() {
   state.menuVisibility = normalizeMenuVisibility({
     checklist: Boolean($("#menuVisibilityChecklist")?.checked),
-    contactnote: Boolean($("#menuVisibilityContactNote")?.checked),
-    contactrequest: Boolean($("#menuVisibilityContactRequest")?.checked),
-    renewalguide: Boolean($("#menuVisibilityRenewalGuide")?.checked)
+    analytics: Boolean($("#menuVisibilityAnalytics")?.checked),
+    evaluation: Boolean($("#menuVisibilityEvaluation")?.checked),
+    renewalguide: Boolean($("#menuVisibilityRenewalGuide")?.checked),
+    payroll: Boolean($("#menuVisibilityPayroll")?.checked),
+    contactnote: false,
+    contactrequest: false
   });
   persistState();
   applyOptionalMenuVisibility();
-  const hiddenCurrent = ["checklist", "contactnote", "contactrequest", "renewalguide"].includes(currentView) && !state.menuVisibility[currentView];
+  const hiddenCurrent = ["checklist", "analytics", "evaluation", "renewalguide", "payroll"].includes(currentView) && !state.menuVisibility[currentView];
   if (hiddenCurrent) switchView("dashboard");
   showToast("메뉴 노출 설정을 저장했습니다.");
 }
@@ -16222,8 +16234,19 @@ function attachEvents() {
     saveState(`${savedMonth} 월 목표지수를 저장했습니다. 기존 월 실적은 유지됩니다.`);
   });
 
-  $("#teamOperationSingleBtn")?.addEventListener("click", () => setTeamOperationMode("1"));
-  $("#teamOperationDualBtn")?.addEventListener("click", () => setTeamOperationMode("2"));
+  $("#teamOperationEffectiveMonth")?.addEventListener("change", () => {
+    renderTeamOperationSettings();
+    renderSettings();
+  });
+  $("#teamOperationSingleBtn")?.addEventListener("click", () => {
+    setTeamOperationMode("1", teamOperationSettingsMonth());
+  });
+  $("#teamOperationDualBtn")?.addEventListener("click", () => {
+    const effectiveMonth = teamOperationSettingsMonth();
+    setTeamOperationMode("2", effectiveMonth);
+    const userTeamMonth = $("#masterTeamEffectiveMonth");
+    if (userTeamMonth) userTeamMonth.value = effectiveMonth;
+  });
 
 
   $("#receivedDateInput")?.addEventListener("change", () => {
@@ -17054,7 +17077,7 @@ function renderLicenseManagement() {
 }
 // ========================================================================
 
-const APP_VERSION = "v1.01";
+const APP_VERSION = "v1.02";
 const STATE_SCHEMA_VERSION = 4;
 
 function normalizeVersionText(version = "") {
