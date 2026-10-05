@@ -694,7 +694,7 @@ function renderDbHistoryRows(rows = []) {
   mobile.innerHTML = rows.map((row) => {
     const status = dbHistoryStatusLabel(row);
     const id = escapeHtml(String(row.id || row.fileName || ""));
-    return `<article class="db-history-mobile-card"><div class="db-history-mobile-card-head"><strong>${escapeHtml(formatDbDateTime(row.exportedAt))}</strong><span class="db-history-type">${escapeHtml(row.reasonLabel || dbReasonLabel(row.reason))}</span></div><div class="db-history-mobile-card-meta"><span>접수 ${Number(row.recordCount || 0).toLocaleString()}건</span><span>매니저 ${Number(row.managerCount || 0).toLocaleString()}명</span><span class="db-history-status ${status.cls}">${escapeHtml(status.text)}</span></div><div class="db-history-mobile-card-actions"><button class="db-restore" type="button" data-db-restore="${id}">복구</button><button type="button" data-db-export-history="${id}">내보내기</button></div></article>`;
+    return `<article class="db-history-mobile-card"><div class="db-history-mobile-card-head"><strong>${escapeHtml(formatDbDateTime(row.exportedAt))}</strong><span class="db-history-type">${escapeHtml(row.reasonLabel || dbReasonLabel(row.reason))}</span></div><div class="db-history-mobile-card-meta"><span>접수 ${Number(row.recordCount || 0).toLocaleString()}건</span><span>MC ${Number(row.managerCount || 0).toLocaleString()}명</span><span class="db-history-status ${status.cls}">${escapeHtml(status.text)}</span></div><div class="db-history-mobile-card-actions"><button class="db-restore" type="button" data-db-restore="${id}">복구</button><button type="button" data-db-export-history="${id}">내보내기</button></div></article>`;
   }).join("");
 }
 
@@ -719,7 +719,7 @@ async function refreshDbManagement() {
   const counts = dbBackupCounts(state);
 
   if ($("#dbCurrentDataCount")) $("#dbCurrentDataCount").textContent = `${counts.records.toLocaleString()}건`;
-  if ($("#dbCurrentDataDetail")) $("#dbCurrentDataDetail").textContent = `매니저 ${counts.managers.toLocaleString()}명 · 저장항목 ${counts.total.toLocaleString()}개`;
+  if ($("#dbCurrentDataDetail")) $("#dbCurrentDataDetail").textContent = `MC ${counts.managers.toLocaleString()}명 · 저장항목 ${counts.total.toLocaleString()}개`;
 
   try {
     if (IS_PC_APP) {
@@ -2370,7 +2370,7 @@ function saveOperatingGoal(rateOverride = null, forcedReason = "") {
     return;
   }
 
-  showToast(`${formatMonthLabel(month)} 운영목표를 ${rate}% · ${formatNumber(metrics.operatingGoal)}건으로 저장했습니다. 매니저별 목표는 변경되지 않았습니다.`);
+  showToast(`${formatMonthLabel(month)} 운영목표를 ${rate}% · ${formatNumber(metrics.operatingGoal)}건으로 저장했습니다. MC별 목표는 변경되지 않았습니다.`);
 }
 
 function inDateRange(date, start, end) {
@@ -2520,7 +2520,7 @@ function renderMembershipFilterOptions(records = []) {
     return recordBelongsToCurrentUserTeam(record, selectedGoalMonth);
   });
   if (statusFilter) setOptions(statusFilter, optionListWithAll(baseRecords.map((record) => record.status), "전체 상태"), previous.status);
-  if (managerFilter) setOptions(managerFilter, optionListWithAll(baseRecords.map((record) => record.manager), "전체 매니저"), previous.manager);
+  if (managerFilter) setOptions(managerFilter, optionListWithAll(baseRecords.map((record) => record.manager), "전체 MC"), previous.manager);
   if (contactFilter) setOptions(contactFilter, optionListWithAll(baseRecords.map((record) => membershipRecordContact(record)), "전체 컨텍자"), previous.contact);
 }
 
@@ -3203,8 +3203,8 @@ function sortManagerNamesByDisplayOrder(names = []) {
 }
 
 
-// 목표월의 조회 범위와 매니저의 재직/소속 적용월은 서로 다릅니다.
-// 조회기간이 두 달에 걸치면, 두 달 중 실제 재직한 기간이 있는 매니저를 보존합니다.
+// 목표월의 조회 범위와 MC의 재직/소속 적용월은 서로 다릅니다.
+// 조회기간이 두 달에 걸치면, 두 달 중 실제 재직한 기간이 있는 MC를 보존합니다.
 function calendarMonthsForGoalPeriod(month) {
   const goalMonth = normalizeManagerMonth(month) || monthIso();
   const period = monthPeriod(goalMonth);
@@ -3229,8 +3229,8 @@ function teamManagers(month = currentDashboardMonth()) {
   const targetMonth = normalizeManagerMonth(month) || monthIso();
   const calendarMonths = calendarMonthsForGoalPeriod(targetMonth);
   const { start, end } = monthPeriod(targetMonth);
-  // 매니저마다 전체 접수를 다시 검색하면 데이터가 많을 때 화면이 느려집니다.
-  // 접수는 한 번만 순회하여 해당 목표기간의 담당 매니저를 찾습니다.
+  // MC마다 전체 접수를 다시 검색하면 데이터가 많을 때 화면이 느려집니다.
+  // 접수는 한 번만 순회하여 해당 목표기간의 담당 MC를 찾습니다.
   const recordManagerIds = new Set();
   const recordManagerNames = new Set();
   (state.records || []).forEach((record) => {
@@ -3242,7 +3242,7 @@ function teamManagers(month = currentDashboardMonth()) {
   return managerIndex().normalized
     .filter((manager) => {
       // 새 목표월 전체에 퇴사자를 무조건 나열하지 않습니다. 현재월 재직자이거나
-      // 목표산정기간에 실제 과거 접수/조정내역이 있는 매니저만 표시합니다.
+      // 목표산정기간에 실제 과거 접수/조정내역이 있는 MC만 표시합니다.
       const currentMember = activeManagerForCalendarMonth(manager, targetMonth);
       const historicalMember = calendarMonths.some((calendarMonth) => activeManagerForCalendarMonth(manager, calendarMonth));
       const hasPeriodRecords = recordManagerIds.has(manager.id) || recordManagerNames.has(manager.name);
@@ -3643,7 +3643,7 @@ function renderDashboardCustomCards(records) {
     labelNode.textContent = active ? card.title : `조건${index + 1}`;
     if (active && String(card.title || "").trim() === "정수기" && card.field === "product") {
       // 정수기 선택카드는 경영평가와 동일하게 목표월의 목표산정기간 전체를 기준으로 집계합니다.
-      // 대시보드의 임의 날짜/매니저/검색 필터 때문에 경영평가 수량과 달라지지 않도록 filtered records를 넘기지 않습니다.
+      // 대시보드의 임의 날짜/MC/검색 필터 때문에 경영평가 수량과 달라지지 않도록 filtered records를 넘기지 않습니다.
       const water = waterPurifierEvaluationMetrics(currentDashboardMonth());
       valueNode.innerHTML =
         `<span class="water-card-count">${formatNumber(water.current)}</span><small class="water-card-rate">${formatNumber(Math.round(water.achievementRate * 10) / 10)}%</small>`;
@@ -3999,13 +3999,13 @@ function renderContactNoteControls() {
   if (statusFilter) setOptions(statusFilter, [{ value: "", label: "전체 진행여부" }, ...CONTACT_NOTE_STATUSES.map(value => ({ value, label: value }))], statusFilter.value);
   const names = sortManagerNamesByDisplayOrder([...(state.managers || []).map((manager) => manager.name), ...(state.contactNotes || []).map((note) => note.manager)].filter(Boolean));
   const managerFilter = $("#contactNoteManagerFilter");
-  if (managerFilter) setOptions(managerFilter, [{ value: "", label: "전체 매니저" }, ...names.map(value => ({ value, label: value }))], managerFilter.value);
+  if (managerFilter) setOptions(managerFilter, [{ value: "", label: "전체 MC" }, ...names.map(value => ({ value, label: value }))], managerFilter.value);
   const datalist = $("#contactNoteManagerOptions");
   if (datalist) datalist.innerHTML = names.map(name => `<option value="${escapeHtml(name)}"></option>`).join("");
   const headerStatus = $("#contactHeaderStatusFilter");
   if (headerStatus) setOptions(headerStatus, [{ value: "", label: "진행여부" }, ...CONTACT_NOTE_STATUSES.map(value => ({ value, label: value }))], headerStatus.value);
   const headerManager = $("#contactHeaderManagerFilter");
-  if (headerManager) setOptions(headerManager, [{ value: "", label: "매니저" }, ...names.map(value => ({ value, label: value }))], headerManager.value);
+  if (headerManager) setOptions(headerManager, [{ value: "", label: "MC" }, ...names.map(value => ({ value, label: value }))], headerManager.value);
 }
 
 function addContactProgressRow(row = {}) {
@@ -5005,7 +5005,7 @@ function analyticsActivityRecords(month, entityName = "") {
     if (!entityKey) return true;
     const sellerKey = analyticsPersonKey(analyticsResolveSellerName(record));
     const managerKey = analyticsPersonKey(analyticsReportedManagerName(record));
-    // 컨스·지원은 실제 판매자뿐 아니라 해당 실적을 받은 등록 매니저에도 귀속합니다.
+    // 컨스·지원은 실제 판매자뿐 아니라 해당 실적을 받은 등록 MC에도 귀속합니다.
     return sellerKey === entityKey || managerKey === entityKey;
   });
 }
@@ -5616,7 +5616,7 @@ function renderAnalyticsCombinedReport(selectedEntity, months, summaries, teamAv
   const summary = summaries.find((item) => item.managerName === selectedEntity);
   if (!summary) {
     empty.hidden = false;
-    empty.textContent = "선택한 매니저의 분석자료가 없습니다.";
+    empty.textContent = "선택한 MC의 분석자료가 없습니다.";
     content.hidden = true;
     if (printButton) printButton.disabled = true;
     return;
@@ -5665,12 +5665,12 @@ function renderAnalyticsCombinedReport(selectedEntity, months, summaries, teamAv
         <div class="analytics-action-priority">${escapeHtml(item.priority)}</div>
         <div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.detail)}</p></div>
       </article>`).join("")
-    : `<div class="empty analytics-empty">현재 이 매니저에게 생성된 실행제안이 없습니다.</div>`;
+    : `<div class="empty analytics-empty">현재 이 MC에게 생성된 실행제안이 없습니다.</div>`;
 
   content.innerHTML = `
     <section class="panel analytics-combined-section analytics-combined-cover">
       <div class="panel-head">
-        <h2>${escapeHtml(selectedEntity)} 매니저 통합분석</h2>
+        <h2>${escapeHtml(selectedEntity)} MC 통합분석</h2>
         <span>${formatMonthLabel(start)} ~ ${formatMonthLabel(end)}</span>
       </div>
       <div class="analytics-kpi-grid analytics-kpi-grid-six">
@@ -5700,7 +5700,7 @@ function renderAnalyticsCombinedReport(selectedEntity, months, summaries, teamAv
     </section>
 
     <section class="panel analytics-combined-section">
-      <div class="panel-head"><h2>매니저분석</h2><span>${escapeHtml(analyticsManagerType(summary, teamAverages))}</span></div>
+      <div class="panel-head"><h2>MC분석</h2><span>${escapeHtml(analyticsManagerType(summary, teamAverages))}</span></div>
       <div class="analytics-detail-kpis">
         <article><span>분석 시작</span><strong>${summary.analysisStartMonth ? formatMonthLabel(summary.analysisStartMonth) : "-"}</strong><em>${summary.average.months}개월 분석</em></article>
         <article><span>최근 추세</span><strong>${summary.trendRate >= 0 ? "+" : ""}${Math.round(summary.trendRate)}%</strong><em>최근3개월 대비</em></article>
@@ -5737,9 +5737,9 @@ function renderAnalyticsCombinedReport(selectedEntity, months, summaries, teamAv
   content.hidden = false;
   if (printButton) {
     printButton.disabled = false;
-    printButton.dataset.printTitle = `${selectedEntity} 매니저 통합분석`;
+    printButton.dataset.printTitle = `${selectedEntity} MC 통합분석`;
   }
-  if (printTitle) printTitle.textContent = `${selectedEntity} 매니저 통합분석 보고서`;
+  if (printTitle) printTitle.textContent = `${selectedEntity} MC 통합분석 보고서`;
 }
 
 
@@ -7852,13 +7852,13 @@ function managementEvaluationRows(metrics) {
     },
 
     {
-      part: "조직관리", partMax: 10, item: "매니저 충원율",
+      part: "조직관리", partMax: 10, item: "MC 충원율",
       value: `${formatNumber(metrics.activeManagerCount)}명 / ${formatNumber(metrics.requiredManagerCount)}명 (${managementEvaluationFormatRate(metrics.managerFillRate)})`,
       criteria: "80% 2점 · 이후 5%당 +1점 · 105% 7점",
       max: 7, score: metrics.scores.managerFill
     },
     {
-      part: "조직관리", partMax: 10, item: "매니저 전월대비 증감",
+      part: "조직관리", partMax: 10, item: "MC 전월대비 증감",
       value: metrics.managerChange === null ? "-" : `${formatNumber(metrics.managerChange)}명`,
       criteria: "70% 미만 0점 · +1명 1점 · +2명 2점 · +3명 3점 · 충원율 90% 이상 3점",
       max: 3, score: metrics.scores.managerChange
@@ -8362,9 +8362,9 @@ function printManagementEvaluation() {
     ["계정관리", "유지율", $("#evaluationRetentionRateInput")?.value ? `${$("#evaluationRetentionRateInput").value}%` : "-"],
     ["계정관리", "해지율", $("#evaluationCancellationRateInput")?.value ? `${$("#evaluationCancellationRateInput").value}%` : "-"],
     ["계정관리", "멤버십 건수", $("#evaluationMembershipPreview")?.textContent || "-"],
-    ["조직관리", "매니저 전월대비 증감", $("#evaluationManagerChangeInput")?.value ? `${$("#evaluationManagerChangeInput").value}명` : "-"],
-    ["조직관리", "현재 매니저수", $("#evaluationManagerCountPreview")?.textContent || "-"],
-    ["조직관리", "매니저 충원율", $("#evaluationManagerFillPreview")?.textContent || "-"],
+    ["조직관리", "MC 전월대비 증감", $("#evaluationManagerChangeInput")?.value ? `${$("#evaluationManagerChangeInput").value}명` : "-"],
+    ["조직관리", "현재 MC수", $("#evaluationManagerCountPreview")?.textContent || "-"],
+    ["조직관리", "MC 충원율", $("#evaluationManagerFillPreview")?.textContent || "-"],
     ["고객서비스관리", "점검 전체계정", $("#evaluationInspectionTotalInput")?.value || "-"],
     ["고객서비스관리", "점검 취소", $("#evaluationInspectionCancelInput")?.value || "-"],
     ["고객서비스관리", "점검 예외보류", $("#evaluationInspectionExceptionHoldInput")?.value || "-"],
@@ -8643,7 +8643,7 @@ function resolvePayrollSeller(customerNo, customerName, product, defaultManager)
     };
   }
 
-  // 3) 완전 미매칭이면 현재 불러오는 주매니저에게 귀속
+  // 3) 완전 미매칭이면 현재 불러오는 주MC에게 귀속
   return {
     seller: String(defaultManager || "").trim() || "미지정",
     matched: false,
@@ -8907,7 +8907,7 @@ function savePayrollArchive() {
   const manager = String(state.payrollManager || $("#payrollManagerInput")?.value || "").trim();
   const month = String(state.payrollMonth || $("#payrollMonthInput")?.value || "").trim();
   const records = Array.isArray(state.payrollRecords) ? state.payrollRecords : [];
-  if (!manager) { showToast("먼저 주매니저를 선택해 주세요."); return; }
+  if (!manager) { showToast("먼저 주MC를 선택해 주세요."); return; }
   if (!month) { showToast("급여월을 선택해 주세요."); $("#payrollMonthInput")?.focus(); return; }
   if (!records.length) { showToast("먼저 급여 엑셀을 불러와 최종 리스트를 확인해 주세요."); return; }
   const archives = Array.isArray(state.payrollArchives) ? state.payrollArchives : [];
@@ -8950,7 +8950,7 @@ async function importPayrollFile(file) {
   if (!file) return;
   const manager = state.payrollManager || $("#payrollManagerInput")?.value || "";
   if (!manager) {
-    showToast("먼저 주매니저를 선택해 주세요.");
+    showToast("먼저 주MC를 선택해 주세요.");
     return;
   }
   state.payrollManager = manager;
@@ -9182,7 +9182,7 @@ function renderCommonControls() {
   const recordSellerFilter = $("#recordSellerFilter");
   if (recordStatusFilter) setOptions(recordStatusFilter, [{ value: "", label: "상태" }, ...statuses.map((status) => ({ value: status, label: status }))], recordStatusFilter.value);
   const recordManagerNames = availableRecordManagerNamesForFilter();
-  if (recordManagerFilter) setOptions(recordManagerFilter, [{ value: "", label: "매니저" }, ...recordManagerNames.map((name) => ({ value: name, label: name }))], recordManagerFilter.value);
+  if (recordManagerFilter) setOptions(recordManagerFilter, [{ value: "", label: "MC" }, ...recordManagerNames.map((name) => ({ value: name, label: name }))], recordManagerFilter.value);
   if (recordCategoryFilter) setOptions(recordCategoryFilter, [{ value: "", label: "판매종류" }, ...mainCategories.map((category) => ({ value: category, label: category }))], recordCategoryFilter.value);
   if (recordSellerFilter) setOptions(recordSellerFilter, [{ value: "", label: "실판매자" }, ...Array.from(new Set([...sellerRoles.filter(Boolean), ...managers])).map((role) => ({ value: role, label: role }))], recordSellerFilter.value);
 
@@ -9190,7 +9190,7 @@ function renderCommonControls() {
   const membershipManagerFilter = $("#membershipManagerFilter");
   const membershipContactFilter = $("#membershipContactFilter");
   if (membershipStatusFilter) setOptions(membershipStatusFilter, [{ value: "", label: "전체 상태" }, ...statuses.map((status) => ({ value: status, label: status }))], membershipStatusFilter.value);
-  if (membershipManagerFilter) setOptions(membershipManagerFilter, [{ value: "", label: "전체 매니저" }, ...managers.map((name) => ({ value: name, label: name }))], membershipManagerFilter.value);
+  if (membershipManagerFilter) setOptions(membershipManagerFilter, [{ value: "", label: "전체 MC" }, ...managers.map((name) => ({ value: name, label: name }))], membershipManagerFilter.value);
   if (membershipContactFilter) setOptions(membershipContactFilter, [{ value: "", label: "전체 컨텍자" }, ...sellerRoles.filter(Boolean).map((role) => ({ value: role, label: role }))], membershipContactFilter.value);
 }
 
@@ -9214,16 +9214,16 @@ function actualPerformanceCreditManagerName(record, managerNames = null) {
   if (seller === "지국장") return "지국장";
 
   // 2) 팀장은 사용자설정의 등록 사용자(마스터)에게 귀속한다.
-  //    예: 매니저=김강령 / 실판매자=팀장 / 사용자=사용자 -> 사용자 실제 실적.
+  //    예: MC=김강령 / 실판매자=팀장 / 사용자=사용자 -> 사용자 실제 실적.
   if (seller === "팀장") {
     const masterName = compactValue((state.appMeta || sampleState.appMeta || {}).masterName, "");
     if (masterName && names.has(masterName)) return masterName;
   }
 
-  // 3) 실판매자에 등록 매니저 이름이 직접 들어 있으면 그 매니저에게 귀속.
+  // 3) 실판매자에 등록 MC 이름이 직접 들어 있으면 그 MC에게 귀속.
   if (seller && names.has(seller)) return seller;
 
-  // 4) 실판매자 미입력 또는 개인 매니저로 특정할 수 없는 값은 주매니저에게 귀속.
+  // 4) 실판매자 미입력 또는 개인 MC로 특정할 수 없는 값은 주MC에게 귀속.
   return manager;
 }
 
@@ -9238,7 +9238,7 @@ function managerPerformanceDisplayManagers(salesManagers, actualMode = false) {
     return true;
   });
 
-  // 일반 매니저가 먼저, 등록 사용자(마스터)는 항상 마지막 관리자 위치.
+  // 일반 MC가 먼저, 등록 사용자(마스터)는 항상 마지막 관리자 위치.
   const normalManagers = unique.filter((manager) => manager.name !== masterName && manager.name !== "지국장");
   const masterManager = unique.find((manager) => manager.name === masterName);
 
@@ -9260,7 +9260,7 @@ function managerPerformanceDisplayManagers(salesManagers, actualMode = false) {
 
 function actualManagerSalesMetrics(records, managerName = "") {
   // 실제 실적현황에서도 컨스는 별도 관리 건수로만 집계합니다.
-  // 재약정/환수는 해당 매니저의 기존 수기값을 그대로 반영합니다.
+  // 재약정/환수는 해당 MC의 기존 수기값을 그대로 반영합니다.
   const base = actuals(records);
   const manual = manualStatFor(managerName);
   const newCount = toNumber(base.newCount);
@@ -9319,13 +9319,13 @@ function renderManagerPerformanceMobileCards(rowMetrics, actualMode = false) {
     const validRate = (!isVirtual && managerGoal > 0) ? Math.max(0, Math.round(toNumber(rate))) : null;
     const diff = diffInfo(metrics.final, managerGoal, isVirtual);
     const shareButton = (!isTotal && !actualMode)
-      ? `<button class="manager-share-icon mobile" type="button" data-manager-share="${escapeHtml(managerName)}" title="${escapeHtml(managerName)} 매니저 카톡 이미지 공유" aria-label="${escapeHtml(managerName)} 매니저 이미지공유">↗</button>`
+      ? `<button class="manager-share-icon mobile" type="button" data-manager-share="${escapeHtml(managerName)}" title="${escapeHtml(managerName)} MC 카톡 이미지 공유" aria-label="${escapeHtml(managerName)} MC 이미지공유">↗</button>`
       : "";
     const rateClass = validRate === null ? "neutral" : validRate >= 100 ? "good" : validRate >= 85 ? "watch" : "danger";
     return `
       <article class="manager-zone-card ${isTotal ? "total" : ""}">
         <div class="manager-zone-head">
-          <div class="manager-zone-name"><span>${isTotal ? "지국 전체" : "매니저"}</span><strong>${escapeHtml(title)}</strong></div>
+          <div class="manager-zone-name"><span>${isTotal ? "지국 전체" : "MC"}</span><strong>${escapeHtml(title)}</strong></div>
           <div class="manager-zone-head-actions">${shareButton}<span class="manager-zone-rate ${rateClass}">${validRate === null ? "-" : `${validRate}%`}</span></div>
         </div>
         <div class="manager-zone-summary">
@@ -9504,17 +9504,17 @@ function renderManagerPerformanceTable(records, salesManagers) {
   if (table) table.classList.toggle("actual-performance-table", actualMode);
   const printButton = $("#managerPerformancePrintBtn");
   if (printButton) {
-    printButton.textContent = actualMode ? "실제 실적현황 출력" : "매니저별 실적현황 출력";
+    printButton.textContent = actualMode ? "실제 실적현황 출력" : "MC별 실적현황 출력";
     printButton.setAttribute("aria-label", printButton.textContent);
   }
   if (guide) {
     guide.textContent = actualMode
-      ? "실판매자 기준의 실제 판매실적입니다. 실판매자=팀장은 등록 사용자(마스터)에게, 실판매자=지국장은 별도 지국장 행에 집계합니다. 실판매자가 없으면 주매니저에게 귀속합니다. 컨스는 별도 관리 건수로 확인하며 재약정·환수는 기존 수기값을 반영합니다."
+      ? "실판매자 기준의 실제 판매실적입니다. 실판매자=팀장은 등록 사용자(마스터)에게, 실판매자=지국장은 별도 지국장 행에 집계합니다. 실판매자가 없으면 주MC에게 귀속합니다. 컨스는 별도 관리 건수로 확인하며 재약정·환수는 기존 수기값을 반영합니다."
       : "신규·패키지·재렌탈·일시불·지원은 접수리스트에서 자동 집계됩니다. 컨스는 접수리스트 등록건을 자동 집계해 지급관리에서 확인할 수 있으며, 재약정·환수는 수기로 입력합니다.";
   }
 
-  const assignedHeaders = ["매니저","신규","패키지","재렌탈","일시불","컨스","지원","영업실적","재약정","환수","최종실적","상시목표","상시부족","달성률"];
-  const actualHeaders = ["매니저","신규","패키지","재렌탈","일시불","지원","영업실적","재약정","환수","최종실적","상시목표","상시부족","달성률"];
+  const assignedHeaders = ["MC","신규","패키지","재렌탈","일시불","컨스","지원","영업실적","재약정","환수","최종실적","상시목표","상시부족","달성률"];
+  const actualHeaders = ["MC","신규","패키지","재렌탈","일시불","지원","영업실적","재약정","환수","최종실적","상시목표","상시부족","달성률"];
   const headers = actualMode ? actualHeaders : assignedHeaders;
   if (head) head.innerHTML = headers.map((label) => `<th>${label}</th>`).join("");
 
@@ -9544,7 +9544,7 @@ function renderManagerPerformanceTable(records, salesManagers) {
       ? `<td class="manager-name-cell"><strong>${escapeHtml(manager.name)}</strong></td>`
       : `<td class="manager-name-cell">
           <strong>${escapeHtml(manager.name)}</strong>
-          <button class="manager-share-icon" type="button" data-manager-share="${escapeHtml(manager.name)}" onclick="window.shareManagerKakaoImage?.(this.dataset.managerShare)" title="${escapeHtml(manager.name)} 매니저 카톡 이미지 공유" aria-label="${escapeHtml(manager.name)} 매니저 이미지공유">↗</button>
+          <button class="manager-share-icon" type="button" data-manager-share="${escapeHtml(manager.name)}" onclick="window.shareManagerKakaoImage?.(this.dataset.managerShare)" title="${escapeHtml(manager.name)} MC 카톡 이미지 공유" aria-label="${escapeHtml(manager.name)} MC 이미지공유">↗</button>
         </td>`;
 
     if (actualMode) {
@@ -9681,14 +9681,14 @@ function renderManagerPerformanceTable(records, salesManagers) {
   }
 
   if (body) {
-    body.innerHTML = rows + totalRow || `<tr><td colspan="${headers.length}" class="empty">등록된 매니저가 없습니다.</td></tr>`;
+    body.innerHTML = rows + totalRow || `<tr><td colspan="${headers.length}" class="empty">등록된 MC가 없습니다.</td></tr>`;
   }
 
   const mobileList = $("#managerPerformanceMobileList");
   if (mobileList) {
     mobileList.innerHTML = displayManagers.length
       ? renderManagerPerformanceMobileCards(rowMetrics, actualMode)
-      : `<div class="manager-mobile-empty">등록된 매니저가 없습니다.</div>`;
+      : `<div class="manager-mobile-empty">등록된 MC가 없습니다.</div>`;
   }
 }
 
@@ -9877,7 +9877,7 @@ function renderDashboardManagerConditionSummary(records, managers) {
   if (!cards.length && !promoRules.length) {
     host.innerHTML = `
       <div class="manager-condition-summary-head">
-        <div class="dashboard-section-heading"><p class="eyebrow">CONDITION &amp; PROMOTION</p><h3>매니저별 조건·프로모션 현황</h3></div>
+        <div class="dashboard-section-heading"><p class="eyebrow">CONDITION &amp; PROMOTION</p><h3>MC별 조건·프로모션 현황</h3></div>
       </div>
       <div class="manager-condition-summary-empty">대시보드 선택 조건 또는 100점을 잡아라 프로모션이 등록되어 있지 않습니다.</div>
     `;
@@ -9894,7 +9894,7 @@ function renderDashboardManagerConditionSummary(records, managers) {
   const useGroupedDesktopHead = Boolean(cards.length && promoRules.length);
   const desktopHead = useGroupedDesktopHead
     ? `<tr class="manager-condition-group-row">
-        <th rowspan="2" class="manager-head-cell">매니저</th>
+        <th rowspan="2" class="manager-head-cell">MC</th>
         ${conditionHead}
         ${promoHead}
       </tr>
@@ -9904,7 +9904,7 @@ function renderDashboardManagerConditionSummary(records, managers) {
         ${promoRules.length ? '<th class="promo-col promo-total-col">총점</th>' : ""}
       </tr>`
     : `<tr class="manager-condition-single-row">
-        <th class="manager-head-cell">매니저</th>
+        <th class="manager-head-cell">MC</th>
         ${cards.map((card) => `<th class="condition-col">${escapeHtml(card.title || "조건")}</th>`).join("")}
         ${promoRules.map((rule) => `<th class="promo-col">${escapeHtml(rule.title || rule.keyword || "항목")}</th>`).join("")}
         ${promoRules.length ? '<th class="promo-col promo-total-col">총점</th>' : ""}
@@ -9951,7 +9951,7 @@ function renderDashboardManagerConditionSummary(records, managers) {
   host.innerHTML = `
     <div class="manager-condition-summary-head">
       <div>
-        <div class="dashboard-section-heading"><p class="eyebrow">CONDITION &amp; PROMOTION</p><h3>매니저별 조건·프로모션 현황</h3></div>
+        <div class="dashboard-section-heading"><p class="eyebrow">CONDITION &amp; PROMOTION</p><h3>MC별 조건·프로모션 현황</h3></div>
       </div>
       ${promo ? `<span class="manager-condition-promo-period">${escapeHtml(promo.name || "100점을 잡아라")}</span>` : ""}
     </div>
@@ -10384,7 +10384,7 @@ function promoCreditManagerName(record, month = "") {
 
 function promotionReferenceMonth(promo) {
   // 시작일의 달력월이 아니라, 그 날짜를 포함하는 '목표 산정월'을 사용합니다.
-  // 예: 8/28~9/28 프로모션은 9월 목표월의 매니저·소속 이력으로 집계.
+  // 예: 8/28~9/28 프로모션은 9월 목표월의 MC·소속 이력으로 집계.
   const date = String(promo?.startDate || promo?.endDate || "").slice(0, 10);
   if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return goalMonthForDate(date, date.slice(0, 7));
@@ -10628,7 +10628,7 @@ function currentTeamForManager(managerOrName, month = currentDashboardMonth()) {
 
 // 실적의 목표월과 조직 이력은 분리합니다. 조회는 목표산정기간으로 하고,
 // 각 접수의 소속팀과 재직 상태는 실제 접수일의 달력월 이력으로 확인합니다.
-// 기존 managerTeamAtRecord는 등록 매니저 이력이 없을 때의 보조정보로 보존합니다.
+// 기존 managerTeamAtRecord는 등록 MC 이력이 없을 때의 보조정보로 보존합니다.
 function recordTeamForGoalMonth(record, targetMonth = "") {
   const manager = managerById(record?.managerId) || managerByName(record?.managerNameAtRecord || record?.manager);
   const month = organizationMonthForDate(record?.receivedDate || record?.installDate, targetMonth || currentDashboardMonth());
@@ -11103,7 +11103,7 @@ function recordPrintHtml(records) {
           <th class="seq">순번</th>
           <th class="date">접수일<br><span>설치요청일</span></th>
           <th class="status">상태</th>
-          <th class="manager">매니저</th>
+          <th class="manager">MC</th>
           <th class="category">판매종류</th>
           <th class="activity">구분</th>
           <th class="count">건수</th>
@@ -11178,7 +11178,7 @@ function mobileHeaderLabels(table) {
     const detailLabels = secondRow
       ? [...secondRow.children].map((cell) => String(cell.textContent || "").replace(/\s+/g, " ").trim())
       : [];
-    return ["매니저", ...detailLabels];
+    return ["MC", ...detailLabels];
   }
 
   const headerRows = [...table.querySelectorAll("thead tr")];
@@ -11554,7 +11554,7 @@ function mobileRecordCardHtml(record, index, total, membership = false) {
     <article class="mobile-record-card${selectedClass}" data-mobile-record-id="${escapeHtml(recordId)}">
       <div class="mobile-record-card-top">
         <div class="mobile-record-manager">
-          <strong>${escapeHtml(compactValue(record.manager, "매니저 미지정"))}</strong>
+          <strong>${escapeHtml(compactValue(record.manager, "MC 미지정"))}</strong>
           <span>#${formatNumber(sequence)} · ${escapeHtml(compactValue(record.receivedDate, "-"))}</span>
         </div>
         <div class="mobile-record-status">
@@ -12014,7 +12014,7 @@ function promotionMonthlyReportHtml(month = monthIso()) {
         <th class="seq">순번</th>
         <th class="promo-name">프로모션 제목</th>
         <th class="period">프로모션 기간</th>
-        <th class="manager">매니저</th>
+        <th class="manager">MC</th>
         <th class="achieved">달성건수</th>
         <th class="reward">지급상품</th>
         <th class="qty">수량</th>
@@ -12166,7 +12166,7 @@ function renderPromotions() {
     : `<div class="empty">현재 목표월 산정기간에 해당하는 프로모션이 없습니다.</div>`;
 
   const promoMonth = activePromotion() ? promotionReferenceMonth(activePromotion()) : currentDashboardMonth();
-  const managerOptions = [{ value: "", label: "전체 매니저" }, ...teamManagers(promoMonth).map((manager) => ({ value: manager.name, label: manager.name }))];
+  const managerOptions = [{ value: "", label: "전체 MC" }, ...teamManagers(promoMonth).map((manager) => ({ value: manager.name, label: manager.name }))];
   const managerScope = $("#promoManagerScopeInput");
   if (managerScope) setOptions(managerScope, managerOptions, managerScope.value);
 
@@ -12181,16 +12181,16 @@ function promotionEmptyResultReason(promo) {
   const matched = records.filter((record) => promoBaseRecordMatches(record, promo));
   if (!matched.length) return "프로모션 기간 내 접수는 있으나 제품 키워드 조건에 맞는 건이 없습니다.";
   const belonging = matched.filter((record) => recordBelongsToCurrentUserTeam(record, recordGoalMonth(record, promotionReferenceMonth(promo))));
-  if (!belonging.length) return "대상 접수는 있으나 현재 지국의 매니저·소속 조건과 일치하지 않습니다.";
+  if (!belonging.length) return "대상 접수는 있으나 현재 지국의 MC·소속 조건과 일치하지 않습니다.";
   const managerMonth = promotionReferenceMonth(promo);
   const managerNames = new Set(teamManagerNames(managerMonth));
   if (!belonging.some((record) => managerNames.has(promoCreditManagerName(record, managerMonth)))) {
-    return "대상 접수는 있으나 해당 목표월의 매니저와 연결되지 않았습니다. 실판매자·담당매니저 및 적용월을 확인해 주세요.";
+    return "대상 접수는 있으나 해당 목표월의 MC와 연결되지 않았습니다. 실판매자·담당MC 및 적용월을 확인해 주세요.";
   }
   if (promo.type === "score" && !(promo.scoreRules || []).length) {
     return "점수형 프로모션의 제품 키워드·점수 조건을 확인해 주세요.";
   }
-  return "대상 접수의 인정 상태·매니저 적용월을 확인해 주세요.";
+  return "대상 접수의 인정 상태·MC 적용월을 확인해 주세요.";
 }
 
 function renderPromotionDetail() {
@@ -12224,8 +12224,8 @@ function renderPromotionDetail() {
   const resultHeadRow = document.querySelector(".promo-result-table thead tr");
   if (resultHeadRow) {
     resultHeadRow.innerHTML = promo.type === "count"
-      ? "<th>순위</th><th>매니저</th><th>인정 건수</th><th>미설치</th><th>달성 단계</th><th>지급 상품</th><th>수량</th>"
-      : "<th>순위</th><th>매니저</th><th>인정 건수</th><th>미설치</th><th>누적 점수</th><th>달성 단계</th><th>지급 상품</th><th>수량</th>";
+      ? "<th>순위</th><th>MC</th><th>인정 건수</th><th>미설치</th><th>달성 단계</th><th>지급 상품</th><th>수량</th>"
+      : "<th>순위</th><th>MC</th><th>인정 건수</th><th>미설치</th><th>누적 점수</th><th>달성 단계</th><th>지급 상품</th><th>수량</th>";
   }
 
   const resultBody = $("#promoManagerResultBody");
@@ -12260,7 +12260,7 @@ function renderPromotionDetail() {
   if (detailSelect) {
     const managers = teamManagerNames(currentPromotionMonth());
     const current = detailSelect.value || "";
-    setOptions(detailSelect, [{ value: "", label: "매니저" }, ...managers.map((name) => ({ value: name, label: name }))], current);
+    setOptions(detailSelect, [{ value: "", label: "MC" }, ...managers.map((name) => ({ value: name, label: name }))], current);
   }
 
   const detailHeadRow = document.querySelector(".promo-stable-detail-grid > div:first-child .mini-table thead tr");
@@ -12323,7 +12323,7 @@ function renderPromotionManagerDetail(promo = activePromotion()) {
             ${isCountType ? "" : `<td>${formatNumber(score)}</td>`}
           </tr>`;
         }).join("")
-      : `<tr><td colspan="${promo.type === "count" ? 5 : 6}" class="empty">${selectedManager ? "선택한 매니저의 대상 접수내역이 없습니다." : "매니저를 선택하면 접수 내역이 표시됩니다."}</td></tr>`;
+      : `<tr><td colspan="${promo.type === "count" ? 5 : 6}" class="empty">${selectedManager ? "선택한 MC의 대상 접수내역이 없습니다." : "MC를 선택하면 접수 내역이 표시됩니다."}</td></tr>`;
   }
 
   const productBody = $("#promoDetailProductBody");
@@ -12340,7 +12340,7 @@ function renderPromotionManagerDetail(promo = activePromotion()) {
     const rows = Array.from(groups.entries());
     productBody.innerHTML = rows.length
       ? rows.map(([keyword, item]) => `<tr><td>${escapeHtml(keyword)}</td><td>${formatNumber(item.count)}건</td>${promo.type === "count" ? "" : `<td>${formatNumber(item.score)}점</td>`}</tr>`).join("")
-      : `<tr><td colspan="${promo.type === "count" ? 2 : 3}" class="empty">${selectedManager ? "제품별 합산 내역이 없습니다." : "매니저를 선택하면 제품별 합산이 표시됩니다."}</td></tr>`;
+      : `<tr><td colspan="${promo.type === "count" ? 2 : 3}" class="empty">${selectedManager ? "제품별 합산 내역이 없습니다." : "MC를 선택하면 제품별 합산이 표시됩니다."}</td></tr>`;
   }
 
   const detailTable = document.querySelector(".promo-stable-detail-grid > div:first-child .mini-table");
@@ -12370,7 +12370,7 @@ function managerSettingsRowMarkup(rawManager, targetMonth, isNew = false) {
   return `<div class="manager-row manager-team-row ${status === "inactive" ? "inactive-manager-row" : ""}" data-manager-id="${escapeHtml(manager.id)}" data-is-new="${isNew ? "true" : "false"}" data-display-order="${manager.displayOrder || 0}">
     <div class="manager-line manager-line-primary">
       <div class="manager-order-control"><span class="manager-order-number">${manager.displayOrder || "-"}</span><div><button class="ghost-button small manager-order-button manager-order-up" type="button" title="위로 이동">▲</button><button class="ghost-button small manager-order-button manager-order-down" type="button" title="아래로 이동">▼</button></div></div>
-      <label>매니저 이름<input class="manager-name" value="${escapeHtml(manager.name)}" placeholder="매니저 이름"></label>
+      <label>MC 이름<input class="manager-name" value="${escapeHtml(manager.name)}" placeholder="MC 이름"></label>
       ${isNew ? `<label>입사 소속팀<select class="manager-team">${teamOptions}</select></label><label>입사월 (달력월)<input class="manager-effective-month" type="month" value="${escapeHtml(targetMonth)}" required></label><label>입사 상태<select class="manager-status"><option value="active">재직</option><option value="inactive">비활성</option></select></label>` : `<div class="manager-current-assignment"><strong>${escapeHtml(formatMonthLabel(targetMonth))} 기준</strong><span>${escapeHtml(team)} · ${status === "inactive" ? "비활성" : "재직"}</span><small>팀 이동·퇴사·복귀는 아래 이력에서 수정</small></div>`}
     </div>
     <div class="manager-line manager-line-secondary">
@@ -12378,7 +12378,7 @@ function managerSettingsRowMarkup(rawManager, targetMonth, isNew = false) {
       <label>${escapeHtml(formatMonthLabel(targetMonth))} 목표<input class="manager-goal" type="number" min="0" step="0.5" value="${escapeHtml(managerGoalFor(manager.name, targetMonth))}"></label>
       <div class="manager-safe-action">${isNew ? `<button class="ghost-button small cancel-new-manager" type="button">등록취소</button>` : `<div class="manager-row-actions"><button class="ghost-button small edit-manager-row" type="button">수정</button><button class="ghost-button small remove-manager" type="button">등록 삭제</button></div>`}</div>
     </div>
-    ${isNew ? `<p class="manager-new-hint">입사월 1일부터 적용됩니다. 이름·입사월·소속팀을 확인한 뒤 ‘매니저 설정 저장’을 누르세요.</p>` : managerTimelineMarkup(manager)}
+    ${isNew ? `<p class="manager-new-hint">입사월 1일부터 적용됩니다. 이름·입사월·소속팀을 확인한 뒤 ‘MC 설정 저장’을 누르세요.</p>` : managerTimelineMarkup(manager)}
   </div>`;
 }
 
@@ -12640,7 +12640,7 @@ function exportFullBackup() {
     schemaVersion: STATE_SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
     version: versionLabelForDisplay(APP_VERSION),
-    description: "접수내역, 경영평가 월별 입력값·주력상품 상대평가 예상점수·팀 정책이행 수기건수, 접수일 기준 매니저 귀속, 매니저 고유번호·노출순번·재직상태·팀 이동이력, 월별 목표·수기실적, 운영목표, 실판매자 귀속, 급여계산·미매칭·저장내역 및 제품분석 설정을 포함한 전체 데이터 백업",
+    description: "접수내역, 경영평가 월별 입력값·주력상품 상대평가 예상점수·팀 정책이행 수기건수, 접수일 기준 MC 귀속, MC 고유번호·노출순번·재직상태·팀 이동이력, 월별 목표·수기실적, 운영목표, 실판매자 귀속, 급여계산·미매칭·저장내역 및 제품분석 설정을 포함한 전체 데이터 백업",
     data: state
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
@@ -12760,7 +12760,7 @@ function confirmBackupRestoreInApp(recordCount, managerCount) {
           <strong style="font-size:22px;">${Number(recordCount || 0).toLocaleString()}건</strong>
         </div>
         <div style="background:#f4f7fb;border:1px solid #e4eaf2;border-radius:12px;padding:14px;text-align:center;">
-          <div style="font-size:12px;color:#738094;margin-bottom:4px;">매니저</div>
+          <div style="font-size:12px;color:#738094;margin-bottom:4px;">MC</div>
           <strong style="font-size:22px;">${Number(managerCount || 0).toLocaleString()}명</strong>
         </div>
       </div>
@@ -12828,7 +12828,7 @@ async function importFullBackupFile(file) {
   const recordCount = Array.isArray(data.records) ? data.records.length : 0;
   const managerCount = Array.isArray(data.managers) ? data.managers.length : 0;
 
-  showToast(`백업 파일 확인 완료 · 접수내역 ${recordCount}건 · 매니저 ${managerCount}명`);
+  showToast(`백업 파일 확인 완료 · 접수내역 ${recordCount}건 · MC ${managerCount}명`);
   const ok = await confirmBackupRestoreInApp(recordCount, managerCount);
   if (!ok) {
     showToast("전체 백업 복원을 취소했습니다.");
@@ -12963,7 +12963,7 @@ function renderInstallAlertCards(records, includeCompleteAction = false) {
           <span class="install-mobile-status ${done ? "done" : "pending"}">${escapeHtml(statusText)}</span>
         </div>
         <div class="install-mobile-meta">
-          <span>매니저</span><strong>${escapeHtml(compactValue(record.manager) || "-")}</strong>
+          <span>MC</span><strong>${escapeHtml(compactValue(record.manager) || "-")}</strong>
           <span>연락처</span><strong>${phone ? escapeHtml(phone) : "-"}</strong>
           <span>제품명</span><strong>${escapeHtml(compactValue(record.product) || "-")}</strong>
           <span>건수</span><strong>${formatNumber(record.count)}</strong>
@@ -13276,11 +13276,11 @@ function collectManagerSettings() {
     const name = String(row.querySelector(".manager-name")?.value || "").trim();
     if (!name) {
       if (row.dataset.isNew === "true") return;
-      invalidMessage = "기존 매니저의 이름은 비워둘 수 없습니다.";
+      invalidMessage = "기존 MC의 이름은 비워둘 수 없습니다.";
       return;
     }
     if (seenNames.has(name)) {
-      invalidMessage = `매니저명 '${name}'이 중복되어 있습니다.`;
+      invalidMessage = `MC명 '${name}'이 중복되어 있습니다.`;
       return;
     }
     seenNames.add(name);
@@ -13338,7 +13338,7 @@ function collectManagerSettings() {
     return false;
   }
 
-  // 명시적으로 삭제한 행 외에 화면에서 누락된 기존 매니저는 보존합니다.
+  // 명시적으로 삭제한 행 외에 화면에서 누락된 기존 MC는 보존합니다.
   existingManagers.forEach((existing) => {
     if (!nextManagers.some((manager) => manager.id === existing.id)) {
       nextManagers.push({ ...existing, displayOrder: nextManagers.length + 1, __goalForTargetMonth: managerGoalFor(existing.name, targetMonth) });
@@ -14274,8 +14274,8 @@ async function reportImageBlob() {
   };
   managerRows.forEach((row,i)=>drawRow(row,i,false));
 
-  // 합계 행: 매니저별 실적현황 + 집중관리 제품만 합계를 표시합니다.
-  // 100점을 잡아라 프로모션은 매니저별 점수만 표시하고 하단 합계는 비워둡니다.
+  // 합계 행: MC별 실적현황 + 집중관리 제품만 합계를 표시합니다.
+  // 100점을 잡아라 프로모션은 MC별 점수만 표시하고 하단 합계는 비워둡니다.
   const totalRow = {
     manager: "합계",
     ...totalMetrics,
@@ -14691,7 +14691,7 @@ function canvasToPngBlob(canvas) {
 
 async function managerShareImageBlob(managerName) {
   const payload = managerDashboardPayload(managerName);
-  if (!payload) throw new Error("매니저 정보를 찾을 수 없습니다.");
+  if (!payload) throw new Error("MC 정보를 찾을 수 없습니다.");
 
   const { manager, totals, rate, shortage, periodStart, periodEnd, branchName, teamName } = payload;
   const canvas = document.createElement("canvas");
@@ -14865,7 +14865,7 @@ async function shareManagerKakaoImage(managerName) {
     return;
   }
 
-  const safeName = String(managerName || "매니저").replace(/[\\/:*?"<>|]/g, "_");
+  const safeName = String(managerName || "MC").replace(/[\\/:*?"<>|]/g, "_");
   const fileName = `${safeName}-MC-실적현황-${todayIso()}.png`;
   openManagerShareModal(blob, fileName, managerName);
   showToast(`${managerName} MC 이미지 미리보기를 열었습니다.`);
@@ -16419,7 +16419,7 @@ function attachEvents() {
       Boolean($("#recordId")?.value)
     );
     updateSellerInputOptions(selectedSeller);
-    showToast(`${recordEntryMonth()} 적용 매니저 목록으로 변경했습니다.`);
+    showToast(`${recordEntryMonth()} 적용 MC 목록으로 변경했습니다.`);
   });
 
   $("#categoryInput").addEventListener("change", () => {
@@ -16472,7 +16472,7 @@ function attachEvents() {
 
     if (!selectedManager || (!activeManagers.includes(selectedManager) && !preservesHistoricalManager)) {
       refreshRecordManagerOptions(receivedMonth, selectedManager, preservesHistoricalManager);
-      showToast(`${receivedMonth} 적용 매니저를 선택해 주세요.`);
+      showToast(`${receivedMonth} 적용 MC를 선택해 주세요.`);
       return;
     }
 
@@ -16785,7 +16785,7 @@ function attachEvents() {
   $("#editManagerSettingsBtn").addEventListener("click", () => {
     unlockSettingsSection("manager");
     refreshManagerOrderNumbers();
-    showToast("매니저 정보와 노출순번을 수정할 수 있습니다.");
+    showToast("MC 정보와 노출순번을 수정할 수 있습니다.");
   });
 
   $("#addManagerBtn").addEventListener("click", () => {
@@ -16812,7 +16812,7 @@ function attachEvents() {
     if (!collectManagerSettings()) return;
     lockSettingsSection("manager");
     invalidateManagerCaches();
-    saveState("매니저 기본정보와 재직·소속 이력을 저장했습니다.");
+    saveState("MC 기본정보와 재직·소속 이력을 저장했습니다.");
   });
 
   $("#managerSettings").addEventListener("change", (event) => {
@@ -16853,12 +16853,12 @@ function attachEvents() {
     if (removeButton) {
       if (!settingsEditMode.manager) return;
       const row = removeButton.closest("[data-manager-id]");
-      const name = String(row?.querySelector(".manager-name")?.value || "매니저").trim();
+      const name = String(row?.querySelector(".manager-name")?.value || "MC").trim();
       const registered = managerById(row?.dataset.managerId);
       if (registered && managerHasStoredReferences(registered)) {
-        showToast("접수·목표·수기실적이 연결된 매니저는 등록 삭제할 수 없습니다. 재직상태 이력에 퇴사·휴직을 추가하세요."); return;
+        showToast("접수·목표·수기실적이 연결된 MC는 등록 삭제할 수 없습니다. 재직상태 이력에 퇴사·휴직을 추가하세요."); return;
       }
-      if (!row || !window.confirm(`${name} 매니저를 등록 목록에서 삭제할까요?\n기존 접수·목표·수기실적은 보존됩니다.`)) return;
+      if (!row || !window.confirm(`${name} MC를 등록 목록에서 삭제할까요?\n기존 접수·목표·수기실적은 보존됩니다.`)) return;
       managerSettingsDeletedIds.add(row.dataset.managerId);
       row.remove();
       refreshManagerOrderNumbers();
@@ -17238,7 +17238,7 @@ function renderLicenseManagement() {
 }
 // ========================================================================
 
-const APP_VERSION = "v1.04";
+const APP_VERSION = "v1.05";
 const STATE_SCHEMA_VERSION = 4;
 
 function normalizeVersionText(version = "") {
@@ -17466,7 +17466,7 @@ function managerTimelineMarkup(manager) {
       <div class="manager-timeline-rows">${manager[kind === "team" ? "teamHistory" : "statusHistory"].map((entry, index) => managerTimelineRowMarkup(kind, entry, kind === "team" ? entry.team : managerHistoryStatusValue(manager, entry), teams, index === 0)).join("")}</div>
       <button type="button" class="ghost-button small history-add">${kind === "team" ? "팀 이동 추가" : "퇴사·휴직·복귀 추가"}</button>
     </section>`).join("")}
-    <p class="manager-history-preview" aria-live="polite">저장된 이력입니다. 수정하려면 ‘매니저 설정 수정’을 누르세요.</p>
+    <p class="manager-history-preview" aria-live="polite">저장된 이력입니다. 수정하려면 ‘MC 설정 수정’을 누르세요.</p>
     <small>접수일의 달력월로 소속을 판단하고, 실적은 목표산정기간으로 집계합니다. 예: 10월 목표기간이 9월 28일부터라면, 10월 퇴사여도 9월 28~30일 접수는 10월 실적에 남습니다. 과거 이력을 정정하면 해당 기간의 팀별 조회·통계·평가도 다시 계산됩니다.</small>
     ${manager.historyEdits?.length ? `<details class="manager-history-audit"><summary>이력 정정 기록 (${manager.historyEdits.length}회)</summary>${manager.historyEdits.slice().reverse().map((edit) => `<p>${escapeHtml(new Date(edit.at).toLocaleString("ko-KR"))}<br>변경 전: ${escapeHtml(managerHistoryDescription(edit.before))}<br>변경 후: ${escapeHtml(managerHistoryDescription(edit.after))}</p>`).join("")}</details>` : ""}
   </details>`;
@@ -17542,7 +17542,7 @@ function updateManagerTimelinePreview(row) {
       if (managerTeamForMonth(existing, month) !== managerTeamForMonth(next, month) || managerStatusForMonth(existing, month) !== managerStatusForMonth(next, month)) affected++;
     }
     preview.classList.remove("history-error");
-    preview.textContent = `저장 대기 · 적용 상태/소속이 달라지는 기존 접수 ${affected}건. 접수 원본은 보존됩니다. 아래 ‘매니저 설정 저장’을 누르면 확정됩니다.`;
+    preview.textContent = `저장 대기 · 적용 상태/소속이 달라지는 기존 접수 ${affected}건. 접수 원본은 보존됩니다. 아래 ‘MC 설정 저장’을 누르면 확정됩니다.`;
   } catch (error) { preview.classList.add("history-error"); preview.textContent = error.message; }
 }
 function managerHasStoredReferences(manager) {
@@ -17587,7 +17587,7 @@ function attachManagerTimelineEvents() {
     list.innerHTML = sortManagersByDisplayOrder(state.managers).map((manager) => managerSettingsRowMarkup(manager, month)).join("");
     refreshManagerOrderNumbers();
     setSettingsSectionEditable("manager", false);
-    showToast("저장하지 않은 매니저 수정을 취소했습니다.");
+    showToast("저장하지 않은 MC 수정을 취소했습니다.");
   });
 }
 
