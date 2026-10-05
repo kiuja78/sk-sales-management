@@ -22158,10 +22158,28 @@ body[data-view="records"] .record-form-row.row-basic {
   box-shadow: 0 4px 10px rgba(194, 69, 59, 0.08) !important;
 }
 
+#sidebarBranchLine,
+#sidebarManagerLine {
+  display: block !important;
+  max-width: 142px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-style: normal !important;
+}
+
+#sidebarBranchLine {
+  color: #7f2028 !important;
+  font-size: 12.5px !important;
+  font-weight: 900 !important;
+  margin-top: 7px !important;
+}
+
 #sidebarManagerLine {
   color: #7a3a35 !important;
+  font-size: 12px !important;
   font-weight: 800 !important;
-  margin-top: 6px !important;
+  margin-top: 2px !important;
 }
 
 .sidebar-credit {
