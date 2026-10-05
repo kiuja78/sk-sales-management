@@ -20101,7 +20101,7 @@ body[data-view="records"] .record-form-row.row-basic {
   }
 
   #dashboardView #managerStatsTable.mobile-card-table .manager-name-cell::before {
-    content: "매니저" !important;
+    content: "MC" !important;
   }
 
   #dashboardView #managerStatsTable.mobile-card-table .manager-name-cell strong {
