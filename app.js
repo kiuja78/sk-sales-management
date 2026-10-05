@@ -1058,6 +1058,88 @@ let dbDriveAccountLabel = "";
 let dbDriveTokenClient = null;
 let dbDriveScriptPromise = null;
 
+const SK_UI_TERM_REPLACEMENTS = Object.freeze([
+  ["매니저", "MC"]
+]);
+
+function replaceSkUiTerms(value = "") {
+  return SK_UI_TERM_REPLACEMENTS.reduce(
+    (text, [from, to]) => String(text).split(from).join(to),
+    String(value ?? "")
+  );
+}
+
+function applySkUiTerminology(root = document.body) {
+  if (!root) return;
+
+  const textNodes = [];
+  const startNode = root.nodeType === Node.TEXT_NODE ? root : null;
+  if (startNode) {
+    textNodes.push(startNode);
+  } else {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const parent = node.parentElement;
+        if (!parent || ["SCRIPT", "STYLE", "TEXTAREA"].includes(parent.tagName) || parent.isContentEditable) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return String(node.nodeValue || "").includes("매니저")
+          ? NodeFilter.FILTER_ACCEPT
+          : NodeFilter.FILTER_REJECT;
+      }
+    });
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+  }
+
+  textNodes.forEach((node) => {
+    if (String(node.nodeValue || "").includes("매니저")) {
+      node.nodeValue = replaceSkUiTerms(node.nodeValue);
+    }
+  });
+
+  const elements = [];
+  if (root.nodeType === Node.ELEMENT_NODE) elements.push(root);
+  if (root.querySelectorAll) {
+    elements.push(...root.querySelectorAll("[placeholder],[title],[aria-label],[data-print-title]"));
+  }
+  elements.forEach((element) => {
+    ["placeholder", "title", "aria-label", "data-print-title"].forEach((attr) => {
+      const value = element.getAttribute?.(attr);
+      if (value && value.includes("매니저")) element.setAttribute(attr, replaceSkUiTerms(value));
+    });
+  });
+}
+
+let skUiTerminologyObserver = null;
+function initSkUiTerminology() {
+  applySkUiTerminology(document.body);
+  if (skUiTerminologyObserver || !document.body) return;
+  skUiTerminologyObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === "characterData") {
+        applySkUiTerminology(mutation.target);
+        return;
+      }
+      if (mutation.type === "attributes") {
+        applySkUiTerminology(mutation.target);
+        return;
+      }
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.ELEMENT_NODE) {
+          applySkUiTerminology(node);
+        }
+      });
+    });
+  });
+  skUiTerminologyObserver.observe(document.body, {
+    subtree: true,
+    childList: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ["placeholder", "title", "aria-label", "data-print-title"]
+  });
+}
+
 function optionalMenuVisibility() {
   state.menuVisibility = normalizeMenuVisibility(state.menuVisibility);
   return state.menuVisibility;
@@ -5527,7 +5609,7 @@ function renderAnalyticsCombinedReport(selectedEntity, months, summaries, teamAv
     content.hidden = true;
     content.innerHTML = "";
     if (printButton) printButton.disabled = true;
-    if (printTitle) printTitle.textContent = "매니저 통합분석 보고서";
+    if (printTitle) printTitle.textContent = "MC 통합분석 보고서";
     return;
   }
 
@@ -9034,6 +9116,9 @@ function renderTopbar() {
 
   $("#topDateLabel").textContent = formatKoreanLongDate();
   $("#masterLine").textContent = [branchName, managerLine].filter(Boolean).join(" ");
+
+  const sidebarBranchLine = $("#sidebarBranchLine");
+  if (sidebarBranchLine) sidebarBranchLine.textContent = branchName || "지국명 미등록";
 
   const sidebarManagerLine = $("#sidebarManagerLine");
   if (sidebarManagerLine) sidebarManagerLine.textContent = managerLine;
@@ -13521,7 +13606,7 @@ function exportCsv() {
 }
 
 function exportExcel() {
-  const header = ["완료여부", "접수날짜", "설치날짜", "매니저", "건수", "전 고객번호", "신규 고객번호", "연락처", "고객명", "판매종류", "구분", "일시불QR", "일시불금액", "제품명", "실판매자", "기타내용"];
+  const header = ["완료여부", "접수날짜", "설치날짜", "MC", "건수", "전 고객번호", "신규 고객번호", "연락처", "고객명", "판매종류", "구분", "일시불QR", "일시불금액", "제품명", "실판매자", "기타내용"];
   const rows = state.records.map((record) => [
     record.status, record.receivedDate, record.installDate, record.manager, record.count,
     record.previousCustomer, record.customerNo, record.phone, record.customerName,
@@ -13666,7 +13751,7 @@ function crc32(bytes) {
 function exportPromotionSummaryCsv() {
   const promo = activePromotion();
   const stats = promoManagerStats(promo);
-  const header = ["프로모션명", "기간", "매니저", "대상건수", "누적점수", "달성단계", "지급상품"];
+  const header = ["프로모션명", "기간", "MC", "대상건수", "누적점수", "달성단계", "지급상품"];
   const rows = stats.map((item) => [
     promo.name,
     `${promo.startDate} ~ ${promo.endDate}`,
@@ -13689,7 +13774,7 @@ function printCurrentManagerPerformance() {
   }
 
   const actualMode = managerPerformanceMode === "actual";
-  const reportTitle = actualMode ? "실제 실적현황" : "매니저별 실적현황";
+  const reportTitle = actualMode ? "실제 실적현황" : "MC별 실적현황";
   const targetPeriod = $("#targetPeriodLabel")?.textContent?.trim() || "";
   const lookupPeriod = $("#periodLabel")?.textContent?.trim() || "";
   const guide = $("#managerPerformanceGuide")?.textContent?.trim() || "";
@@ -14068,7 +14153,7 @@ async function reportImageBlob() {
   const summaryActuals = ["실적", totals.newActual, totals.packageCount, totals.rentalActual, coreActual, shortage, totals.refundActual ? -n(totals.refundActual) : "", totals.renewalActual, overallActual, waterMetrics.current];
   const summaryRates = ["달성율", pct(totals.newActual,goals.newGoal), pct(totals.packageCount,goals.packageGoal), pct(totals.rentalActual,goals.rentalGoal), pct(coreActual,coreGoal,1), coreGoal>0?`${Math.round(shortage/coreGoal*100)}%`:"0%", "", pct(totals.renewalActual,goals.renewalGoal), pct(overallActual,overallGoal), pct(waterMetrics.current,waterMetrics.goal,1)];
 
-  const baseManagerHeaders = ["매니저","신규","패키지","재탈","일시불","컨스","지원","영업실적","재약정","최종실적","상시","부족건"];
+  const baseManagerHeaders = ["MC","신규","패키지","재탈","일시불","컨스","지원","영업실적","재약정","최종실적","상시","부족건"];
   const conditionHeaders = selectedConditionCards.map((card) => card.title || "조건");
   const promoHeaders = promoRules.map((rule)=>rule.title || rule.keyword || "항목");
   const managerHeaders = [...baseManagerHeaders, ...conditionHeaders, ...promoHeaders, ...(promoRules.length ? ["합계"] : [])];
@@ -14147,7 +14232,7 @@ async function reportImageBlob() {
   const promoStartX=conditionStartX+conditionW;
   const promoW=promoWidths.reduce((sum,width)=>sum+width,0)+(promoRules.length?62:0);
   rect(0,managerBandY,productStartX,bandH,C.blue);
-  text("매니저별 실적현황",productStartX/2,managerBandY+bandH/2,22,800,C.white);
+  text("MC별 실적현황",productStartX/2,managerBandY+bandH/2,22,800,C.white);
   if(conditionHeaders.length){
     rect(conditionStartX,managerBandY,conditionW,bandH,C.conditionBand);
     text("집중관리 제품",conditionStartX+conditionW/2,managerBandY+bandH/2,18,800,C.white);
@@ -14537,13 +14622,13 @@ async function printDashboardImageBlob() {
   // manager table panel
   const managerY = 816;
   fillRoundRect(ctx, panelX, managerY, panelW, 840, 22, "#ffffff", "#d5deea", 2);
-  drawCanvasText(ctx, "매니저별 실적현황", panelX + 28, managerY + 28, 18, 900, "#173558", "left");
+  drawCanvasText(ctx, "MC별 실적현황", panelX + 28, managerY + 28, 18, 900, "#173558", "left");
 
   const mHeaderY = managerY + 60;
   const mHeaderH = 44;
   const mRowH = 74;
   const mCols = [130, 80, 90, 100, 90, 90, 80, 80, 70, 90, 90, 80, 80];
-  const mTitles = ["매니저", "신규", "패키지", "재렌탈", "일시불", "영업", "재약", "오다", "환수", "최종", "목표", "부족", "달성"];
+  const mTitles = ["MC", "신규", "패키지", "재렌탈", "일시불", "영업", "재약", "오다", "환수", "최종", "목표", "부족", "달성"];
   x = tableX;
   mTitles.forEach((title, idx) => {
     fillRoundRect(ctx, x, mHeaderY, mCols[idx] - 3, mHeaderH, 6, idx === 5 || idx === 9 ? "#1e66b5" : "#0f4c8a");
@@ -14630,7 +14715,7 @@ async function managerShareImageBlob(managerName) {
   drawCanvasText(ctx, `${branchName} ${teamName}`, 237, 106, 34, 900, "#ffffff", "center");
   drawCanvasText(ctx, todayKoreanDateText(), 982, 106, 30, 800, "#e8f2ff", "right");
 
-  drawCanvasText(ctx, `${manager.name} 매니저`, 72, 196, 68, 900, "#ffffff", "left");
+  drawCanvasText(ctx, `${manager.name} MC`, 72, 196, 68, 900, "#ffffff", "left");
 
   fillRoundRect(ctx, 72, 268, 540, 56, 28, "rgba(255,255,255,0.94)");
   drawCanvasText(ctx, `${periodStart || "-"}  ~  ${periodEnd || "-"}`, 342, 299, 33, 800, "#13305c", "center");
@@ -14752,7 +14837,7 @@ function openManagerShareModal(blob, fileName, managerName) {
   openSharePreviewModal(
     blob,
     fileName,
-    `${managerName} 매니저 실적 이미지 미리보기`,
+    `${managerName} MC 실적 이미지 미리보기`,
     "kakao"
   );
 }
@@ -14770,7 +14855,7 @@ function closeManagerShareModal() {
 }
 
 async function shareManagerKakaoImage(managerName) {
-  showToast(`${managerName} 매니저 이미지 미리보기를 준비합니다.`);
+  showToast(`${managerName} MC 이미지 미리보기를 준비합니다.`);
   let blob;
   try {
     blob = await managerShareImageBlob(managerName);
@@ -14781,9 +14866,9 @@ async function shareManagerKakaoImage(managerName) {
   }
 
   const safeName = String(managerName || "매니저").replace(/[\\/:*?"<>|]/g, "_");
-  const fileName = `${safeName}-매니저-실적현황-${todayIso()}.png`;
+  const fileName = `${safeName}-MC-실적현황-${todayIso()}.png`;
   openManagerShareModal(blob, fileName, managerName);
-  showToast(`${managerName} 매니저 이미지 미리보기를 열었습니다.`);
+  showToast(`${managerName} MC 이미지 미리보기를 열었습니다.`);
 }
 
 async function copyCurrentManagerShareImage() {
@@ -14814,7 +14899,7 @@ function saveCurrentManagerShareImage() {
   const url = URL.createObjectURL(currentManagerShareBlob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = currentManagerShareFileName || `매니저-실적현황-${todayIso()}.png`;
+  link.download = currentManagerShareFileName || `MC-실적현황-${todayIso()}.png`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 500);
   showToast("공유 이미지를 저장했습니다. 카톡에서 파일로 첨부하면 됩니다.");
@@ -14855,11 +14940,11 @@ async function kakaoShareCurrentManagerImage() {
     return;
   }
 
-  const file = new File([currentManagerShareBlob], currentManagerShareFileName || `매니저-실적현황-${todayIso()}.png`, { type: "image/png" });
+  const file = new File([currentManagerShareBlob], currentManagerShareFileName || `MC-실적현황-${todayIso()}.png`, { type: "image/png" });
 
   try {
     if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], title: "매니저 실적현황" });
+      await navigator.share({ files: [file], title: "MC 실적현황" });
       return;
     }
   } catch (error) {
@@ -17153,7 +17238,7 @@ function renderLicenseManagement() {
 }
 // ========================================================================
 
-const APP_VERSION = "v1.03";
+const APP_VERSION = "v1.04";
 const STATE_SCHEMA_VERSION = 4;
 
 function normalizeVersionText(version = "") {
@@ -17271,6 +17356,7 @@ async function init() {
   if (dayFilter) dayFilter.value = "";
   setDashboardRange(period.start, dashboardDefaultEnd(period));
   attachEvents();
+  initSkUiTerminology();
   document.body.dataset.view = currentView;
   const recordsView = $("#recordsView");
   if (recordsView && !recordsView.dataset.mobileRecordTab) recordsView.dataset.mobileRecordTab = "main";
